@@ -14,10 +14,12 @@ export class Bot extends Fighter {
 	}
 
 	wantsToAttack(time) {
-		const distance = Math.abs(this.target.x - this.x);
-		const sameHeight = Math.abs(this.target.y - this.y) < 40;
+		if (this.isDead || this.isGuarding || this.isDashing) return false;
 
-		if (time > this.attackCooldown && distance < 65 && sameHeight) {
+		const distanceX = Math.abs(this.target.x - this.x);
+		const distanceY = Math.abs(this.target.y - this.y);
+
+		if (time > this.attackCooldown && distanceX < 65 && distanceY < 50) {
 			this.attackCooldown = time + 700;
 			return true;
 		}
