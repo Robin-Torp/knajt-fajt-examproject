@@ -1,8 +1,11 @@
-export function runBotAI(bot, target) {
+export function runBotAI(bot, target, time) {
 	const distanceX = target.x - bot.x;
 	const distanceY = target.y - bot.y;
+	const absX = Math.abs(distanceX);
 
-	if (Math.abs(distanceX) > 55) {
+	bot.stopGuard();
+
+	if (absX > 60) {
 		if (distanceX < 0) {
 			bot.moveLeft();
 		} else {
@@ -10,9 +13,13 @@ export function runBotAI(bot, target) {
 		}
 	} else {
 		bot.stop();
+
+		if (time % 1200 < 150) {
+			bot.startGuard();
+		}
 	}
 
-	if (distanceY < -50 && bot.body.blocked.down) {
+	if (distanceY < -60 && bot.body.blocked.down) {
 		bot.jump();
 	}
 }

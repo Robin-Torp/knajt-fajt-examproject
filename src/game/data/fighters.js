@@ -7,6 +7,7 @@ export const fighters = {
 		jumpForce: settings.jumpForce,
 		color: 0x4ecdc4,
 	},
+
 	botEasy: {
 		texture: "bot",
 		speed: settings.botSpeed,
