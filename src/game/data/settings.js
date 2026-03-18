@@ -9,18 +9,19 @@ export const settings = {
 	jumpForce: 450,
 	maxJumps: 2,
 
+	attackCooldown: 850,
+
 	dashSpeed: 520,
 	dashDuration: 140,
-	dashCooldownGroundOnly: true,
+	dashCooldown: 1200,
 	dashIFrames: true,
 
 	wallJumpX: 280,
 	wallJumpY: 420,
 	wallJumpLockTime: 180,
 
-	attackRange: 70,
-	roundRestartDelay: 1200,
-
 	fastFallSpeed: 700,
 	maxFallSpeed: 900,
+
+	roundRestartDelay: 1200,
 };

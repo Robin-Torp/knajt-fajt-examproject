@@ -3,19 +3,19 @@ import { settings } from "../data/settings";
 
 export class Fighter extends Phaser.Physics.Arcade.Sprite {
 	constructor(scene, x, y, config) {
-		super(scene, x, y, null);
+		super(scene, x, y, config.texture);
 
 		this.scene = scene;
+		this.textureKey = config.texture;
 		this.speed = config.speed;
 		this.jumpForce = config.jumpForce;
-		this.color = config.color;
 
 		this.isDead = false;
 		this.isGuarding = false;
 		this.isDashing = false;
-		this.canDash = true;
+		this.isAttacking = false;
+		this.attackReadyAt = 0;
 		this.hasIFrames = false;
-
 		this.facing = "right";
 
 		this.maxJumps = settings.maxJumps;
@@ -23,15 +23,39 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 
 		this.wallJumpLockUntil = 0;
 		this.wallJumpLockDirection = 0;
-
 		this.ignorePlatformUntil = 0;
+
+		this.attackDidHit = false;
+		this.attackActive = false;
+
+		this.canDash = true;
+		this.dashReadyAt = 0;
+		this.dashReadyBlinking = false;
 
 		scene.add.existing(this);
 		scene.physics.add.existing(this);
 
-		this.setDisplaySize(40, 70);
-		this.setTint(this.color);
+		this.setDisplaySize(120, 96);
 		this.setCollideWorldBounds(false);
+		this.setOrigin(0.5, 0.8);
+
+		this.body.setSize(18, 38);
+		this.body.setOffset(31, 22);
+
+		this.sword = scene.add.sprite(x, y, "sword");
+		this.sword.setOrigin(0.5, 0.8);
+		this.sword.setDepth(this.depth + 1);
+		this.sword.setDisplaySize(120, 96);
+		this.sword.setVisible(true);
+
+		this.attackHitbox = scene.add.rectangle(x, y, 42, 16, 0xff0000, 0);
+		scene.physics.add.existing(this.attackHitbox);
+
+		this.attackHitbox.body.allowGravity = false;
+		this.attackHitbox.body.enable = false;
+		this.attackHitbox.visible = false;
+
+		this.play(`${this.textureKey}-idle`);
 	}
 
 	preUpdate(time, delta) {
@@ -41,15 +65,135 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 
 		if (this.body.blocked.down) {
 			this.jumpsRemaining = this.maxJumps;
-
-			if (settings.dashCooldownGroundOnly) {
-				this.canDash = true;
-			}
 		}
 
 		if (this.body.velocity.y > settings.maxFallSpeed) {
 			this.setVelocityY(settings.maxFallSpeed);
 		}
+
+		if (!this.canDash && time >= this.dashReadyAt) {
+			this.canDash = true;
+			this.blinkDashReady();
+		}
+
+		this.updateAnimation();
+		this.updateSword();
+		this.updateAttackHitbox();
+	}
+
+	updateAnimation() {
+		if (this.isDead) {
+			this.playIfNeeded(`${this.textureKey}-death`);
+			return;
+		}
+
+		if (this.isAttacking) {
+			this.playIfNeeded(`${this.textureKey}-attack`);
+			return;
+		}
+
+		if (this.isDashing) {
+			this.playIfNeeded(`${this.textureKey}-dash`);
+			return;
+		}
+
+		if (this.isGuarding) {
+			this.playIfNeeded(`${this.textureKey}-idle`);
+			return;
+		}
+
+		if (!this.body.blocked.down) {
+			if (this.body.velocity.y < 0) {
+				this.playIfNeeded(`${this.textureKey}-jump`);
+			} else {
+				this.playIfNeeded(`${this.textureKey}-fall`);
+			}
+			return;
+		}
+
+		if (Math.abs(this.body.velocity.x) > 5) {
+			this.playIfNeeded(`${this.textureKey}-run`);
+			return;
+		}
+
+		this.playIfNeeded(`${this.textureKey}-idle`);
+	}
+
+	playIfNeeded(key) {
+		if (this.anims.currentAnim?.key !== key) {
+			this.play(key, true);
+		}
+	}
+
+	faceTarget(target) {
+		if (!target) return;
+
+		if (target.x > this.x) {
+			this.facing = "right";
+			this.setFlipX(true);
+		} else {
+			this.facing = "left";
+			this.setFlipX(false);
+		}
+
+		this.updateAttackHitbox();
+
+		if (this.sword) {
+			this.sword.setFlipX(this.flipX);
+		}
+	}
+
+	updateSword() {
+		if (!this.sword) return;
+
+		this.sword.setPosition(this.x, this.y);
+		this.sword.setFlipX(this.flipX);
+		this.sword.setVisible(true);
+
+		let swordAnim = "sword-idle";
+
+		if (this.isDead) {
+			swordAnim = "sword-death";
+		} else if (this.isAttacking) {
+			swordAnim = "sword-attack";
+		} else if (this.isDashing) {
+			swordAnim = "sword-dash";
+		} else if (!this.body.blocked.down) {
+			if (this.body.velocity.y < 0) {
+				swordAnim = "sword-jump";
+			} else {
+				swordAnim = "sword-fall";
+			}
+		} else if (Math.abs(this.body.velocity.x) > 5) {
+			swordAnim = "sword-run";
+		}
+
+		if (this.scene.anims.exists(swordAnim)) {
+			if (this.sword.anims.currentAnim?.key !== swordAnim) {
+				this.sword.play(swordAnim, true);
+			}
+		}
+	}
+
+	updateAttackHitbox() {
+		if (!this.attackHitbox || !this.attackHitbox.body) return;
+
+		const offsetX = this.facing === "right" ? 28 : -28;
+		const offsetY = -8;
+
+		this.attackHitbox.setPosition(this.x + offsetX, this.y + offsetY);
+		this.attackHitbox.body.updateFromGameObject();
+
+		if (!this.attackActive || !this.isAttacking || this.isDead) {
+			this.attackHitbox.body.enable = false;
+			this.attackHitbox.visible = false;
+			return;
+		}
+
+		this.attackHitbox.body.enable = true;
+
+		// debug:
+		// this.attackHitbox.visible = true;
 	}
 
 	canMoveInDirection(direction, time) {
@@ -64,23 +208,31 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 	}
 
 	moveLeft(time = 0) {
-		if (this.isDead || this.isDashing || this.isGuarding) return;
+		if (this.isDead || this.isDashing || this.isGuarding || this.isAttacking)
+			return;
 		if (!this.canMoveInDirection(-1, time)) return;
 
 		this.setVelocityX(-this.speed);
+		this.setFlipX(false);
 		this.facing = "left";
 	}
 
 	moveRight(time = 0) {
-		if (this.isDead || this.isDashing || this.isGuarding) return;
+		if (this.isDead || this.isDashing || this.isGuarding || this.isAttacking)
+			return;
 		if (!this.canMoveInDirection(1, time)) return;
 
 		this.setVelocityX(this.speed);
+		this.setFlipX(true);
 		this.facing = "right";
 	}
 
 	stop() {
 		if (this.isDead || this.isDashing) return;
+		if (this.isAttacking && this.body.blocked.down) {
+			this.setVelocityX(0);
+			return;
+		}
 		this.setVelocityX(0);
 	}
 
@@ -104,6 +256,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 
 		this.setVelocityX(direction * settings.wallJumpX);
 		this.setVelocityY(-settings.wallJumpY);
+		this.setFlipX(direction > 0);
 		this.facing = direction > 0 ? "right" : "left";
 
 		this.wallJumpLockDirection = -direction;
@@ -133,26 +286,34 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 	}
 
 	startGuard() {
-		if (this.isDead || this.isDashing) return;
+		if (this.isDead || this.isDashing || this.isAttacking) return;
 		this.isGuarding = true;
+		this.setAlpha(0.8);
 	}
 
 	stopGuard() {
 		this.isGuarding = false;
+		if (!this.isDead && !this.isDashing) {
+			this.setAlpha(1);
+		}
 	}
 
 	dash(direction) {
-		if (this.isDead || this.isDashing || !this.canDash) return false;
-
+		if (this.isDead || this.isDashing || !this.canDash || this.isAttacking) {
+			return false;
+		}
 		this.isDashing = true;
 		this.canDash = false;
+		this.dashReadyAt = this.scene.time.now + settings.dashCooldown;
 		this.isGuarding = false;
 		this.hasIFrames = settings.dashIFrames;
+
+		this.setFlipX(direction > 0);
 		this.facing = direction < 0 ? "left" : "right";
 
 		this.setVelocityX(direction * settings.dashSpeed);
 		this.setVelocityY(0);
-		this.setAlpha(0.7);
+		this.setAlpha(0.6);
 
 		this.scene.time.delayedCall(settings.dashDuration, () => {
 			if (!this.body) return;
@@ -160,7 +321,99 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 			this.isDashing = false;
 			this.hasIFrames = false;
 			this.setVelocityX(0);
-			this.setAlpha(this.isDead ? 0.5 : 1);
+
+			if (!this.isDead && !this.isGuarding) {
+				this.setAlpha(1);
+			}
+		});
+
+		return true;
+	}
+
+	blinkDashReady() {
+		if (this.dashReadyBlinking || this.isDead) return;
+
+		this.dashReadyBlinking = true;
+
+		let flashes = 0;
+
+		const flash = () => {
+			if (this.isDead) {
+				this.dashReadyBlinking = false;
+				return;
+			}
+
+			this.setTintFill(0xffffff);
+			if (this.sword) {
+				this.sword.setTintFill(0xffffff);
+			}
+
+			this.scene.time.delayedCall(70, () => {
+				this.clearTint();
+				if (this.sword) {
+					this.sword.clearTint();
+				}
+
+				flashes += 1;
+
+				if (flashes < 3) {
+					this.scene.time.delayedCall(70, flash);
+				} else {
+					this.dashReadyBlinking = false;
+				}
+			});
+		};
+
+		flash();
+	}
+
+	startAttack() {
+		if (this.isDead || this.isDashing || this.isGuarding || this.isAttacking) {
+			return false;
+		}
+
+		if (this.scene.time.now < this.attackReadyAt) {
+			return false;
+		}
+
+		this.attackReadyAt = this.scene.time.now + settings.attackCooldown;
+
+		this.isAttacking = true;
+		this.attackDidHit = false;
+		this.attackActive = false;
+
+		if (this.body.blocked.down) {
+			this.setVelocityX(0);
+		}
+
+		this.play(`${this.textureKey}-attack`, true);
+		this.updateAttackHitbox();
+
+		// startup
+		this.scene.time.delayedCall(180, () => {
+			if (!this.isDead && this.isAttacking) {
+				this.attackActive = true;
+			}
+		});
+
+		// active window end
+		this.scene.time.delayedCall(320, () => {
+			this.attackActive = false;
+		});
+
+		// recovery end
+		this.scene.time.delayedCall(650, () => {
+			this.isAttacking = false;
+			this.attackActive = false;
+			this.attackDidHit = false;
+
+			if (this.attackHitbox?.body) {
+				this.attackHitbox.body.enable = false;
+			}
+
+			if (this.attackHitbox) {
+				this.attackHitbox.visible = false;
+			}
 		});
 
 		return true;
@@ -172,10 +425,21 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 		this.isDead = true;
 		this.isGuarding = false;
 		this.isDashing = false;
+		this.isAttacking = false;
+		this.attackActive = false;
 		this.hasIFrames = false;
 
+		if (this.attackHitbox?.body) {
+			this.attackHitbox.body.enable = false;
+		}
+		if (this.attackHitbox) {
+			this.attackHitbox.visible = false;
+		}
+		if (this.sword) {
+			this.sword.setVisible(false);
+		}
+
 		this.setVelocity(0, 0);
-		this.setTint(0xffffff);
 		this.setAlpha(0.5);
 	}
 
@@ -183,6 +447,9 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 		this.isDead = false;
 		this.isGuarding = false;
 		this.isDashing = false;
+		this.isAttacking = false;
+		this.attackActive = false;
+		this.attackDidHit = false;
 		this.canDash = true;
 		this.hasIFrames = false;
 
@@ -191,7 +458,18 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 		this.wallJumpLockDirection = 0;
 		this.ignorePlatformUntil = 0;
 
+		if (this.attackHitbox?.body) {
+			this.attackHitbox.body.enable = false;
+		}
+		if (this.attackHitbox) {
+			this.attackHitbox.visible = false;
+		}
+		if (this.sword) {
+			this.sword.setVisible(true);
+			this.sword.setAlpha(1);
+			this.sword.setFrame(0);
+		}
+
 		this.setAlpha(1);
-		this.setTint(this.color);
 	}
 }

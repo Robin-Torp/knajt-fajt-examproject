@@ -13,7 +13,7 @@ export class FightScene extends Phaser.Scene {
 	create() {
 		this.roundOver = false;
 
-		this.add.text(20, 20, "Mini Fighter", {
+		this.add.text(20, 20, "Knajt Fajt", {
 			fontSize: "24px",
 			color: "#ffffff",
 		});
@@ -21,7 +21,7 @@ export class FightScene extends Phaser.Scene {
 		this.controlsText = this.add.text(
 			20,
 			50,
-			"A/D = move | W eller Space = jump | S = fast fall | S + jump = drop through | Shift = guard | Shift + A/D = dash | J = attack | R = restart",
+			"A/D = move | W or Space = jump | S = fast fall | S + jump = drop through | Shift = guard | Shift + A/D = dash | J = attack | R = restart",
 			{
 				fontSize: "16px",
 				color: "#ffffff",
@@ -72,6 +72,8 @@ export class FightScene extends Phaser.Scene {
 
 		this.player = new Player(this, 200, 300, fighters.player);
 		this.bot = new Bot(this, 760, 300, fighters.botEasy, this.player);
+		this.player.faceTarget(this.bot);
+		this.bot.faceTarget(this.player);
 
 		this.physics.add.collider(this.player, this.ground);
 		this.physics.add.collider(this.bot, this.ground);
@@ -141,35 +143,39 @@ export class FightScene extends Phaser.Scene {
 		this.bot.update(time);
 
 		if (this.player.wantsToAttack()) {
-			const hit = tryAttack(this.player, this.bot, settings.attackRange);
-			if (hit) {
-				this.endRound("Spelaren vann!");
-				return;
-			}
+			this.player.startAttack();
 		}
 
 		if (this.bot.wantsToAttack(time)) {
-			const hit = tryAttack(this.bot, this.player, settings.attackRange);
-			if (hit) {
-				this.endRound("Botten vann!");
-				return;
-			}
+			this.bot.startAttack();
+		}
+
+		const playerHit = tryAttack(this.player, this.bot);
+		if (playerHit) {
+			this.endRound("Player won!");
+			return;
+		}
+
+		const botHit = tryAttack(this.bot, this.player);
+		if (botHit) {
+			this.endRound("Bot won!");
+			return;
 		}
 
 		if (this.player.y > settings.gameHeight + 100) {
 			this.player.die();
-			this.endRound("Botten vann!");
+			this.endRound("Bot won!");
 			return;
 		}
 
 		if (this.bot.y > settings.gameHeight + 100) {
 			this.bot.die();
-			this.endRound("Spelaren vann!");
+			this.endRound("Player won!");
 		}
 	}
 
 	endRound(message) {
 		this.roundOver = true;
-		this.resultText.setText(`${message} Tryck R för restart`);
+		this.resultText.setText(`${message} Press R to restart`);
 	}
 }
