@@ -84,7 +84,10 @@ export class Player extends Fighter {
 	}
 
 	wantsToAttack() {
-		if (this.isGuarding || this.isDashing || this.isDead) return false;
+		if (this.isGuarding || this.isDashing || this.isDead || this.isAttacking) {
+			return false;
+		}
+
 		return Phaser.Input.Keyboard.JustDown(this.keys.attack);
 	}
 }
