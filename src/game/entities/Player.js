@@ -17,6 +17,11 @@ export class Player extends Fighter {
 	}
 
 	update(time) {
+		if (this.scene.isMatchStarting) {
+			this.stop();
+			return;
+		}
+
 		if (this.isDead) return;
 
 		const leftDown = this.keys.left.isDown;

@@ -14,6 +14,9 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 		this.isGuarding = false;
 		this.isDashing = false;
 		this.isAttacking = false;
+		this.isLaunched = false;
+		this.isClashing = false;
+
 		this.attackReadyAt = 0;
 		this.hasIFrames = false;
 		this.facing = "right";
@@ -38,6 +41,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 		this.setDisplaySize(120, 96);
 		this.setCollideWorldBounds(false);
 		this.setOrigin(0.5, 0.8);
+		this.setDragX(0);
 
 		this.body.setSize(18, 38);
 		this.body.setOffset(31, 22);
@@ -48,12 +52,34 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 		this.sword.setDisplaySize(120, 96);
 		this.sword.setVisible(true);
 
+		this.guardEffect = scene.add.sprite(x, y, "active-guard");
+		this.guardEffect.setOrigin(0.5, 0.8);
+		this.guardEffect.setDisplaySize(120, 96);
+		this.guardEffect.setVisible(false);
+		this.guardEffect.setDepth(this.depth + 2);
+
 		this.attackHitbox = scene.add.rectangle(x, y, 42, 16, 0xff0000, 0);
 		scene.physics.add.existing(this.attackHitbox);
 
 		this.attackHitbox.body.allowGravity = false;
 		this.attackHitbox.body.enable = false;
 		this.attackHitbox.visible = false;
+
+		this.nameTag = scene.add
+			.text(x, y - 60, config.name || "", {
+				fontSize: "14px",
+				color: "#ffffff",
+				backgroundColor: "#000000aa",
+				padding: { x: 6, y: 2 },
+			})
+			.setOrigin(0.5);
+
+		this.nameArrow = scene.add
+			.text(x, y - 50, "▼", {
+				fontSize: "13px",
+				color: config.uiColor || "#ffffff",
+			})
+			.setOrigin(0.5);
 
 		this.play(`${this.textureKey}-idle`);
 	}
@@ -62,6 +88,14 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 		super.preUpdate(time, delta);
 
 		if (!this.body) return;
+
+		if (this.nameTag) {
+			this.nameTag.setPosition(this.x, this.y - 78);
+		}
+
+		if (this.nameArrow) {
+			this.nameArrow.setPosition(this.x, this.y - 60);
+		}
 
 		if (this.body.blocked.down) {
 			this.jumpsRemaining = this.maxJumps;
@@ -76,6 +110,29 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 			this.blinkDashReady();
 		}
 
+		if (this.isLaunched) {
+			if (this.body.blocked.down) {
+				this.setDragX(700);
+
+				if (
+					Math.abs(this.body.velocity.x) < 12 &&
+					Math.abs(this.body.velocity.y) < 20
+				) {
+					this.setVelocity(0, 0);
+					this.setBounce(0.2, 0.25);
+					this.isLaunched = false;
+					this.setDragX(0);
+				}
+			} else {
+				this.setDragX(0);
+			}
+		}
+
+		if (this.guardEffect) {
+			this.guardEffect.setPosition(this.x, this.y);
+			this.guardEffect.setFlipX(this.flipX);
+		}
+
 		this.updateAnimation();
 		this.updateSword();
 		this.updateAttackHitbox();
@@ -84,6 +141,11 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 	updateAnimation() {
 		if (this.isDead) {
 			this.playIfNeeded(`${this.textureKey}-death`);
+			return;
+		}
+
+		if (this.isClashing) {
+			this.playIfNeeded(`${this.textureKey}-fall`);
 			return;
 		}
 
@@ -191,9 +253,6 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 		}
 
 		this.attackHitbox.body.enable = true;
-
-		// debug:
-		// this.attackHitbox.visible = true;
 	}
 
 	canMoveInDirection(direction, time) {
@@ -208,8 +267,15 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 	}
 
 	moveLeft(time = 0) {
-		if (this.isDead || this.isDashing || this.isGuarding || this.isAttacking)
+		if (
+			this.isDead ||
+			this.isDashing ||
+			this.isGuarding ||
+			this.isAttacking ||
+			this.isClashing
+		) {
 			return;
+		}
 		if (!this.canMoveInDirection(-1, time)) return;
 
 		this.setVelocityX(-this.speed);
@@ -218,8 +284,15 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 	}
 
 	moveRight(time = 0) {
-		if (this.isDead || this.isDashing || this.isGuarding || this.isAttacking)
+		if (
+			this.isDead ||
+			this.isDashing ||
+			this.isGuarding ||
+			this.isAttacking ||
+			this.isClashing
+		) {
 			return;
+		}
 		if (!this.canMoveInDirection(1, time)) return;
 
 		this.setVelocityX(this.speed);
@@ -228,16 +301,25 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 	}
 
 	stop() {
-		if (this.isDead || this.isDashing) return;
+		if (this.isDead || this.isDashing || this.isClashing) return;
+
 		if (this.isAttacking && this.body.blocked.down) {
-			this.setVelocityX(0);
+			this.setVelocityX(this.body.velocity.x * 0.35);
 			return;
 		}
+
 		this.setVelocityX(0);
 	}
 
 	jump() {
-		if (this.isDead || this.isDashing) return;
+		if (
+			this.isDead ||
+			this.isDashing ||
+			this.isClashing ||
+			this.scene.matchDecided
+		) {
+			return;
+		}
 
 		if (this.body.blocked.down) {
 			this.setVelocityY(-this.jumpForce);
@@ -252,7 +334,15 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 	}
 
 	wallJump(direction) {
-		if (this.isDead || this.isDashing) return;
+		if (
+			this.isDead ||
+			this.isDashing ||
+			this.isClashing ||
+			this.scene.matchDecided ||
+			this.scene.isRespawning
+		) {
+			return;
+		}
 
 		this.setVelocityX(direction * settings.wallJumpX);
 		this.setVelocityY(-settings.wallJumpY);
@@ -266,7 +356,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 	}
 
 	fastFall() {
-		if (this.isDead || this.isDashing) return;
+		if (this.isDead || this.isDashing || this.isClashing) return;
 		if (this.body.blocked.down) return;
 
 		if (this.body.velocity.y < settings.fastFallSpeed) {
@@ -275,7 +365,15 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 	}
 
 	dropThroughPlatform() {
-		if (this.isDead || this.isDashing) return;
+		if (
+			this.isDead ||
+			this.isDashing ||
+			this.isClashing ||
+			this.scene.matchDecided ||
+			this.scene.isRespawning
+		) {
+			return;
+		}
 
 		this.ignorePlatformUntil = this.scene.time.now + 220;
 		this.setVelocityY(Math.max(this.body.velocity.y, 160));
@@ -286,22 +384,51 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 	}
 
 	startGuard() {
-		if (this.isDead || this.isDashing || this.isAttacking) return;
+		if (
+			this.isDead ||
+			this.isDashing ||
+			this.isAttacking ||
+			this.isClashing ||
+			this.scene.matchDecided ||
+			this.scene.isRespawning
+		) {
+			return;
+		}
+
 		this.isGuarding = true;
-		this.setAlpha(0.8);
+
+		if (this.guardEffect) {
+			this.guardEffect.setVisible(true);
+
+			if (this.scene.anims.exists("active-guard-loop")) {
+				this.guardEffect.play("active-guard-loop", true);
+			}
+		}
 	}
 
 	stopGuard() {
 		this.isGuarding = false;
-		if (!this.isDead && !this.isDashing) {
-			this.setAlpha(1);
+
+		if (this.guardEffect) {
+			this.guardEffect.anims.stop();
+			this.guardEffect.setFrame(0);
+			this.guardEffect.setVisible(false);
 		}
 	}
 
 	dash(direction) {
-		if (this.isDead || this.isDashing || !this.canDash || this.isAttacking) {
+		if (
+			this.isDead ||
+			this.isDashing ||
+			!this.canDash ||
+			this.isAttacking ||
+			this.isClashing ||
+			this.scene.matchDecided ||
+			this.scene.isRespawning
+		) {
 			return false;
 		}
+
 		this.isDashing = true;
 		this.canDash = false;
 		this.dashReadyAt = this.scene.time.now + settings.dashCooldown;
@@ -319,8 +446,11 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 			if (!this.body) return;
 
 			this.isDashing = false;
-			this.hasIFrames = false;
 			this.setVelocityX(0);
+
+			this.scene.time.delayedCall(settings.dashIFrameExtra, () => {
+				this.hasIFrames = false;
+			});
 
 			if (!this.isDead && !this.isGuarding) {
 				this.setAlpha(1);
@@ -368,7 +498,15 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 	}
 
 	startAttack() {
-		if (this.isDead || this.isDashing || this.isGuarding || this.isAttacking) {
+		if (
+			this.isDead ||
+			this.isDashing ||
+			this.isGuarding ||
+			this.isAttacking ||
+			this.isClashing ||
+			this.scene.matchDecided ||
+			this.scene.isRespawning
+		) {
 			return false;
 		}
 
@@ -383,25 +521,22 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 		this.attackActive = false;
 
 		if (this.body.blocked.down) {
-			this.setVelocityX(0);
+			this.setVelocityX(this.body.velocity.x * 0.35);
 		}
 
 		this.play(`${this.textureKey}-attack`, true);
 		this.updateAttackHitbox();
 
-		// startup
 		this.scene.time.delayedCall(180, () => {
 			if (!this.isDead && this.isAttacking) {
 				this.attackActive = true;
 			}
 		});
 
-		// active window end
 		this.scene.time.delayedCall(320, () => {
 			this.attackActive = false;
 		});
 
-		// recovery end
 		this.scene.time.delayedCall(650, () => {
 			this.isAttacking = false;
 			this.attackActive = false;
@@ -419,8 +554,49 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 		return true;
 	}
 
+	launch(direction = 1, powerX = 340, powerY = 260) {
+		this.isDead = true;
+		this.isGuarding = false;
+		this.isDashing = false;
+		this.isAttacking = false;
+		this.attackActive = false;
+		this.hasIFrames = false;
+		this.isLaunched = true;
+
+		if (this.attackHitbox?.body) {
+			this.attackHitbox.body.enable = false;
+		}
+
+		this.setVelocity(direction * powerX, -powerY);
+		this.setBounce(0.5, 0.8);
+	}
+
+	clashPush(direction = 1) {
+		this.isAttacking = false;
+		this.attackActive = false;
+		this.attackDidHit = true;
+		this.isClashing = true;
+		this.hasIFrames = true;
+
+		if (this.attackHitbox?.body) {
+			this.attackHitbox.body.enable = false;
+		}
+
+		this.setDragX(0);
+		this.setBounce(0, 0);
+		this.setVelocity(direction * 780, -180);
+
+		this.scene.time.delayedCall(360, () => {
+			this.isClashing = false;
+			this.hasIFrames = false;
+		});
+	}
+
 	die() {
 		if (this.hasIFrames) return;
+
+		if (this.nameTag) this.nameTag.setVisible(false);
+		if (this.nameArrow) this.nameArrow.setVisible(false);
 
 		this.isDead = true;
 		this.isGuarding = false;
@@ -435,11 +611,12 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 		if (this.attackHitbox) {
 			this.attackHitbox.visible = false;
 		}
-		if (this.sword) {
-			this.sword.setVisible(false);
+
+		if (this.guardEffect) {
+			this.guardEffect.stop();
+			this.guardEffect.setVisible(false);
 		}
 
-		this.setVelocity(0, 0);
 		this.setAlpha(0.5);
 	}
 
@@ -448,10 +625,17 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 		this.isGuarding = false;
 		this.isDashing = false;
 		this.isAttacking = false;
+		this.isLaunched = false;
+		this.isClashing = false;
+
 		this.attackActive = false;
 		this.attackDidHit = false;
+
 		this.canDash = true;
 		this.hasIFrames = false;
+		this.attackReadyAt = 0;
+		this.dashReadyAt = 0;
+		this.dashReadyBlinking = false;
 
 		this.jumpsRemaining = this.maxJumps;
 		this.wallJumpLockUntil = 0;
@@ -467,9 +651,19 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 		if (this.sword) {
 			this.sword.setVisible(true);
 			this.sword.setAlpha(1);
+			this.sword.clearTint();
 			this.sword.setFrame(0);
 		}
+		if (this.guardEffect) {
+			this.guardEffect.stop();
+			this.guardEffect.setVisible(false);
+		}
+		if (this.nameTag) this.nameTag.setVisible(true);
+		if (this.nameArrow) this.nameArrow.setVisible(true);
 
+		this.clearTint();
+		this.setBounce(0, 0);
+		this.setDragX(0);
 		this.setAlpha(1);
 	}
 }

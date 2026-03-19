@@ -7,7 +7,7 @@ export const settings = {
 	botSpeed: 220,
 
 	jumpForce: 450,
-	maxJumps: 2,
+	maxJumps: 1,
 
 	attackCooldown: 850,
 
@@ -15,6 +15,7 @@ export const settings = {
 	dashDuration: 140,
 	dashCooldown: 1200,
 	dashIFrames: true,
+	dashIFrameExtra: 60,
 
 	wallJumpX: 280,
 	wallJumpY: 420,
