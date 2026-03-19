@@ -3,7 +3,7 @@ import { Player } from "../entities/Player";
 import { Bot } from "../entities/Bot";
 import { fighters } from "../data/fighters";
 import { settings } from "../data/settings";
-import { tryAttack } from "../systems/combat";
+import { resolveCombat } from "../systems/combat";
 
 export class FightScene extends Phaser.Scene {
 	constructor() {
@@ -12,27 +12,43 @@ export class FightScene extends Phaser.Scene {
 
 	create() {
 		this.roundOver = false;
+		this.matchDecided = false;
+		this.isRespawning = false;
+		this.isMatchStarting = false;
 
-		this.add.text(20, 20, "Knajt Fajt", {
+		this.playerStocks = 3;
+		this.botStocks = 3;
+
+		this.playerHudName = this.add.text(20, 16, fighters.player.name || "P1", {
 			fontSize: "24px",
+			color: fighters.player.uiColor || "#ffffff",
+		});
+
+		this.playerHudStocks = this.add.text(20, 44, "● ● ●", {
+			fontSize: "22px",
 			color: "#ffffff",
 		});
 
-		this.controlsText = this.add.text(
-			20,
-			50,
-			"A/D = move | W or Space = jump | S = fast fall | S + jump = drop through | Shift = guard | Shift + A/D = dash | J = attack | R = restart",
-			{
-				fontSize: "16px",
+		this.botHudName = this.add
+			.text(settings.gameWidth - 20, 16, fighters.botEasy.name || "BOT", {
+				fontSize: "24px",
+				color: fighters.botEasy.uiColor || "#ffffff",
+			})
+			.setOrigin(1, 0);
+
+		this.botHudStocks = this.add
+			.text(settings.gameWidth - 20, 44, "● ● ●", {
+				fontSize: "22px",
 				color: "#ffffff",
-				wordWrap: { width: 900 },
-			},
-		);
+			})
+			.setOrigin(1, 0);
 
-		this.resultText = this.add.text(20, 100, "", {
-			fontSize: "20px",
-			color: "#ffffff",
-		});
+		this.resultText = this.add
+			.text(settings.gameWidth / 2, 20, "", {
+				fontSize: "24px",
+				color: "#ffffff",
+			})
+			.setOrigin(0.5, 0);
 
 		this.ground = this.add.rectangle(
 			settings.gameWidth / 2,
@@ -72,8 +88,12 @@ export class FightScene extends Phaser.Scene {
 
 		this.player = new Player(this, 200, 300, fighters.player);
 		this.bot = new Bot(this, 760, 300, fighters.botEasy, this.player);
+
 		this.player.faceTarget(this.bot);
 		this.bot.faceTarget(this.player);
+
+		this.player.setBounce(0, 0);
+		this.bot.setBounce(0, 0);
 
 		this.physics.add.collider(this.player, this.ground);
 		this.physics.add.collider(this.bot, this.ground);
@@ -102,6 +122,14 @@ export class FightScene extends Phaser.Scene {
 		this.restartKey = this.input.keyboard.addKey(
 			Phaser.Input.Keyboard.KeyCodes.R,
 		);
+
+		this.updateStockText();
+		this.startMatchSequence();
+	}
+
+	updateStockText() {
+		this.playerHudStocks.setText("● ".repeat(this.playerStocks).trim() || "—");
+		this.botHudStocks.setText("● ".repeat(this.botStocks).trim() || "—");
 	}
 
 	shouldCollideWithPlatform(fighter, platform) {
@@ -120,15 +148,76 @@ export class FightScene extends Phaser.Scene {
 		const isFallingOrStill = fighterBody.velocity.y >= 0;
 		const isAbovePlatform = fighterBottom <= platformTop + 12;
 
-		if (!isFallingOrStill) {
-			return false;
-		}
-
-		if (!isAbovePlatform) {
-			return false;
-		}
+		if (!isFallingOrStill) return false;
+		if (!isAbovePlatform) return false;
 
 		return true;
+	}
+
+	startMatchSequence() {
+		this.isMatchStarting = true;
+
+		this.player.setVelocity(0, 0);
+		this.bot.setVelocity(0, 0);
+
+		const centerX = settings.gameWidth / 2;
+		const centerY = settings.gameHeight / 2;
+
+		const text = this.add
+			.text(centerX, centerY, "3", {
+				fontSize: "64px",
+				color: "#ffffff",
+			})
+			.setOrigin(0.5);
+
+		let count = 3;
+
+		const tick = () => {
+			if (count > 1) {
+				count -= 1;
+				text.setText(String(count));
+				this.pulseText(text);
+
+				this.time.delayedCall(500, tick);
+				return;
+			}
+
+			text.setText("FIGHT!");
+			this.pulseText(text);
+
+			this.cameras.main.shake(120, 0.006);
+
+			this.tweens.add({
+				targets: this.cameras.main,
+				zoom: 1.06,
+				duration: 120,
+				yoyo: true,
+				ease: "Quad.Out",
+			});
+
+			this.time.delayedCall(500, () => {
+				text.destroy();
+				this.isMatchStarting = false;
+			});
+		};
+
+		this.pulseText(text);
+		this.time.delayedCall(500, tick);
+	}
+
+	pulseText(text) {
+		text.setScale(0.5);
+		text.setAlpha(0);
+
+		this.tweens.add({
+			targets: text,
+			scale: 1.15,
+			alpha: 1,
+			duration: 160,
+			ease: "Back.Out",
+			yoyo: true,
+			hold: 60,
+		});
 	}
 
 	update(time) {
@@ -142,36 +231,124 @@ export class FightScene extends Phaser.Scene {
 		this.player.update(time);
 		this.bot.update(time);
 
-		if (this.player.wantsToAttack()) {
-			this.player.startAttack();
+		if (!this.matchDecided && !this.isRespawning && !this.isMatchStarting) {
+			if (this.player.wantsToAttack()) {
+				this.player.startAttack();
+			}
+
+			if (this.bot.wantsToAttack(time)) {
+				this.bot.startAttack();
+			}
+
+			const combatResult = resolveCombat(this, this.player, this.bot);
+
+			if (combatResult.clash) {
+				return;
+			}
+
+			if (combatResult.winner === "A") {
+				this.handleKO("bot");
+				return;
+			}
+
+			if (combatResult.winner === "B") {
+				this.handleKO("player");
+				return;
+			}
+
+			if (this.player.y > settings.gameHeight + 100) {
+				this.player.die();
+				this.handleKO("player");
+				return;
+			}
+
+			if (this.bot.y > settings.gameHeight + 100) {
+				this.bot.die();
+				this.handleKO("bot");
+				return;
+			}
+		}
+	}
+
+	handleKO(loser) {
+		if (this.isRespawning || this.matchDecided) return;
+
+		this.isRespawning = true;
+
+		if (loser === "player") {
+			this.playerStocks -= 1;
+		} else {
+			this.botStocks -= 1;
 		}
 
-		if (this.bot.wantsToAttack(time)) {
-			this.bot.startAttack();
+		this.updateStockText();
+
+		this.time.delayedCall(1600, () => {
+			if (this.playerStocks <= 0) {
+				this.matchDecided = true;
+				this.endRound("Bot won!");
+				return;
+			}
+
+			if (this.botStocks <= 0) {
+				this.matchDecided = true;
+				this.endRound("Player won!");
+				return;
+			}
+
+			this.respawnFighter(loser);
+			this.isRespawning = false;
+		});
+	}
+
+	respawnFighter(loser) {
+		const fighter = loser === "player" ? this.player : this.bot;
+		const opponent = loser === "player" ? this.bot : this.player;
+
+		fighter.resetState();
+
+		if (loser === "player") {
+			fighter.setPosition(220, 120);
+		} else {
+			fighter.setPosition(740, 120);
 		}
 
-		const playerHit = tryAttack(this.player, this.bot);
-		if (playerHit) {
-			this.endRound("Player won!");
-			return;
-		}
+		fighter.setVelocity(0, 0);
+		fighter.setBounce(0, 0);
 
-		const botHit = tryAttack(this.bot, this.player);
-		if (botHit) {
-			this.endRound("Bot won!");
-			return;
-		}
+		this.applyRespawnInvulnerability(fighter);
+	}
 
-		if (this.player.y > settings.gameHeight + 100) {
-			this.player.die();
-			this.endRound("Bot won!");
-			return;
-		}
+	applyRespawnInvulnerability(fighter) {
+		fighter.hasIFrames = true;
 
-		if (this.bot.y > settings.gameHeight + 100) {
-			this.bot.die();
-			this.endRound("Player won!");
-		}
+		let flashes = 0;
+
+		const flash = () => {
+			if (!fighter || fighter.isDead) return;
+
+			fighter.setTintFill(0xffffff);
+			if (fighter.sword) {
+				fighter.sword.setTintFill(0xffffff);
+			}
+
+			this.time.delayedCall(70, () => {
+				fighter.clearTint();
+				if (fighter.sword) {
+					fighter.sword.clearTint();
+				}
+
+				flashes += 1;
+
+				if (flashes < 8) {
+					this.time.delayedCall(70, flash);
+				} else {
+					fighter.hasIFrames = false;
+				}
+			});
+		};
+
+		flash();
 	}
 
 	endRound(message) {

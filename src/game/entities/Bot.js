@@ -9,6 +9,11 @@ export class Bot extends Fighter {
 	}
 
 	update(time) {
+		if (this.scene.isMatchStarting) {
+			this.stop();
+			return;
+		}
+
 		if (this.isDead) return;
 		runBotAI(this, this.target, time);
 	}
