@@ -13,7 +13,7 @@ export const gameConfig = (parent) => ({
 		default: "arcade",
 		arcade: {
 			gravity: { y: settings.gravity },
-			debug: true,
+			debug: false,
 		},
 	},
 	scene: [BootScene, PreloadScene, FightScene],

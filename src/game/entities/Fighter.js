@@ -338,8 +338,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 			this.isDead ||
 			this.isDashing ||
 			this.isClashing ||
-			this.scene.matchDecided ||
-			this.scene.isRespawning
+			this.scene.matchDecided
 		) {
 			return;
 		}

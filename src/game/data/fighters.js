@@ -6,7 +6,7 @@ export const fighters = {
 		speed: settings.playerSpeed,
 		jumpForce: settings.jumpForce,
 		name: "P1",
-		uiColor: "#4ecdc4",
+		uiColor: "#0f6c4f",
 	},
 
 	botEasy: {
