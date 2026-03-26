@@ -1,6 +1,6 @@
 export const settings = {
-	gameWidth: 960,
-	gameHeight: 540,
+	gameWidth: 1280,
+	gameHeight: 720,
 	gravity: 1000,
 
 	playerSpeed: 260,

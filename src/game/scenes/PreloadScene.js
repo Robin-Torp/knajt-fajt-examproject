@@ -1,3 +1,4 @@
+import Phaser from "phaser";
 import { createCharacterAnimations } from "../animations/createCharacterAnimations";
 
 export class PreloadScene extends Phaser.Scene {
@@ -29,6 +30,26 @@ export class PreloadScene extends Phaser.Scene {
 			frameWidth: 80,
 			frameHeight: 64,
 		});
+
+		this.load.spritesheet("floor-tiles", "/assets/stage/Floor Tiles2.png", {
+			frameWidth: 32,
+			frameHeight: 32,
+		});
+
+		//Bakgrunds assets
+		this.load.image("bg-layer1", "/assets/stage/bg/bg_layer1.png");
+		this.load.image("bg-layer2", "/assets/stage/bg/bg_layer2.png");
+		this.load.image("bg-layer3", "/assets/stage/bg/bg_layer3.png");
+		this.load.image("bg-layer4", "/assets/stage/bg/bg_layer4.png");
+		this.load.image("bg-layer5", "/assets/stage/bg/bg_layer5.png");
+
+		// Atmosfär assets
+		this.load.image("cloud1", "/assets/stage/cloud1.png");
+		this.load.image("cloud2", "/assets/stage/cloud2.png");
+		this.load.image("cloud3", "/assets/stage/cloud3.png");
+		this.load.image("cloud6", "/assets/stage/cloud6.png");
+		this.load.image("birds1", "/assets/stage/birds1.png");
+		this.load.image("sun", "/assets/stage/sun.png");
 	}
 
 	create() {
