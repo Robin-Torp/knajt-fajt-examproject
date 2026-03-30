@@ -5,6 +5,7 @@ import { fighters } from "../data/fighters";
 import { settings } from "../data/settings";
 import { resolveCombat } from "../systems/combat";
 import { stageLayout, TILE_SIZE, GROUND_Y } from "../systems/StageLayouts";
+import { saveMatch } from "../services/leaderboardService";
 
 export class FightScene extends Phaser.Scene {
 	constructor() {
@@ -27,6 +28,10 @@ export class FightScene extends Phaser.Scene {
 		this.createHud();
 		this.createStageContainers();
 		this.buildStage(this.currentStage);
+
+		this.pauseKey = this.input.keyboard.addKey(
+			Phaser.Input.Keyboard.KeyCodes.ESC,
+		);
 
 		this.player = new Player(
 			this,
@@ -55,11 +60,6 @@ export class FightScene extends Phaser.Scene {
 		this.bot.setBounce(0, 0);
 
 		this.setupStageColliders();
-
-		this.restartKey = this.input.keyboard.addKey(
-			Phaser.Input.Keyboard.KeyCodes.R,
-		);
-
 		this.updateStockText();
 		this.startMatchSequence();
 	}
@@ -213,7 +213,7 @@ export class FightScene extends Phaser.Scene {
 		const fromLeft = Math.random() > 0.5;
 		const x = fromLeft ? -80 : settings.gameWidth + 80;
 		const y = Phaser.Math.Between(50, 180);
-		const speed = Phaser.Math.FloatBetween(70, 110);
+		const speed = Phaser.Math.FloatBetween(50, 70);
 
 		const bird = this.add.image(x, y, "birds1");
 		bird.setDepth(-45);
@@ -525,6 +525,7 @@ export class FightScene extends Phaser.Scene {
 
 		const text = this.add
 			.text(centerX, centerY, "3", {
+				fontFamily: "Canterbury",
 				fontSize: "64px",
 				color: "#ffffff",
 			})
@@ -596,12 +597,12 @@ export class FightScene extends Phaser.Scene {
 	}
 
 	update(time, delta) {
-		this.updateAtmosphere(delta);
-
-		if (Phaser.Input.Keyboard.JustDown(this.restartKey)) {
-			this.scene.restart();
+		if (Phaser.Input.Keyboard.JustDown(this.pauseKey)) {
+			this.scene.launch("PauseScene");
+			this.scene.pause();
 			return;
 		}
+		this.updateAtmosphere(delta);
 
 		if (this.roundOver) return;
 
@@ -724,6 +725,30 @@ export class FightScene extends Phaser.Scene {
 
 	endRound(message) {
 		this.roundOver = true;
-		this.resultText.setText(`${message} Press R to restart`);
+
+		const playerName = this.registry.get("playerName") || "P1 (Guest)";
+		const userId = this.registry.get("userId");
+
+		const didPlayerWin = message === "Player won!";
+
+		const winnerText = didPlayerWin ? `${playerName} Wins!` : "Bot Wins!";
+
+		this.resultText.setText(winnerText);
+
+		saveMatch({
+			userId,
+			username: playerName,
+			win: didPlayerWin,
+		});
+
+		this.tweens.add({
+			targets: this.resultText,
+			alpha: 0,
+			duration: 1500,
+			delay: 1500,
+			onComplete: () => {
+				this.scene.start("MenuScene");
+			},
+		});
 	}
 }

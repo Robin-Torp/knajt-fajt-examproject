@@ -6,6 +6,17 @@
     }
 }
 
+@font-face {
+    font-family: "Canterbury";
+    src: url("/assets/fonts/Canterbury.ttf") format("truetype");
+    font-weight: normal;
+    font-style: normal;
+}
+
+canvas {
+    display: block;
+}
+
 body {
     margin: 0;
     font-family: Arial, sans-serif;

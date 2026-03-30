@@ -87,6 +87,6 @@ export class PreloadScene extends Phaser.Scene {
 		createSwordAnim("sword-dash", [60, 61, 62, 63, 64, 65], 14, -1);
 		createSwordAnim("sword-death", [66, 67, 68, 69], 8, 0);
 
-		this.scene.start("FightScene");
+		this.scene.start("MenuScene");
 	}
 }
