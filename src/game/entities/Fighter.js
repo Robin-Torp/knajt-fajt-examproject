@@ -376,8 +376,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 			this.isDead ||
 			this.isDashing ||
 			this.isClashing ||
-			this.scene.matchDecided ||
-			this.scene.isRespawning
+			this.scene.matchDecided
 		) {
 			return;
 		}
@@ -396,8 +395,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 			this.isDashing ||
 			this.isAttacking ||
 			this.isClashing ||
-			this.scene.matchDecided ||
-			this.scene.isRespawning
+			this.scene.matchDecided
 		) {
 			return;
 		}
@@ -431,8 +429,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 			!this.canDash ||
 			this.isAttacking ||
 			this.isClashing ||
-			this.scene.matchDecided ||
-			this.scene.isRespawning
+			this.scene.matchDecided
 		) {
 			return false;
 		}
@@ -512,8 +509,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 			this.isGuarding ||
 			this.isAttacking ||
 			this.isClashing ||
-			this.scene.matchDecided ||
-			this.scene.isRespawning
+			this.scene.matchDecided
 		) {
 			return false;
 		}
