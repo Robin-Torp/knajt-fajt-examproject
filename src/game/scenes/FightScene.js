@@ -357,11 +357,14 @@ export class FightScene extends Phaser.Scene {
 		const startX = xTiles * TILE_SIZE;
 		const widthPx = widthTiles * TILE_SIZE;
 
+		const bodyHeight = 18;
+		const bodyOffsetY = -7;
+
 		const body = this.add.rectangle(
 			startX + widthPx / 2,
-			y,
+			y + bodyOffsetY,
 			widthPx,
-			18,
+			bodyHeight,
 			0x000000,
 			0,
 		);
@@ -608,10 +611,6 @@ export class FightScene extends Phaser.Scene {
 		if (!this.matchDecided && !this.isRespawning && !this.isMatchStarting) {
 			if (this.player.wantsToAttack()) {
 				this.player.startAttack();
-			}
-
-			if (this.bot.wantsToAttack(time)) {
-				this.bot.startAttack();
 			}
 
 			const combatResult = resolveCombat(this, this.player, this.bot);

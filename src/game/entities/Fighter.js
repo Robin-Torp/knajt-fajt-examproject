@@ -20,6 +20,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 		this.attackReadyAt = 0;
 		this.hasIFrames = false;
 		this.facing = "right";
+		this.attackFacing = null;
 
 		this.maxJumps = settings.maxJumps;
 		this.jumpsRemaining = settings.maxJumps;
@@ -190,6 +191,10 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 	faceTarget(target) {
 		if (!target) return;
 
+		if (this.isAttacking || this.isDashing || this.isClashing) {
+			return;
+		}
+
 		if (target.x > this.x) {
 			this.facing = "right";
 			this.setFlipX(true);
@@ -240,7 +245,10 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 	updateAttackHitbox() {
 		if (!this.attackHitbox || !this.attackHitbox.body) return;
 
-		const offsetX = this.facing === "right" ? 28 : -28;
+		const activeFacing =
+			this.isAttacking && this.attackFacing ? this.attackFacing : this.facing;
+
+		const offsetX = activeFacing === "right" ? 28 : -28;
 		const offsetY = -8;
 
 		this.attackHitbox.setPosition(this.x + offsetX, this.y + offsetY);
@@ -395,6 +403,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 		}
 
 		this.isGuarding = true;
+		this.setVelocityX(0);
 
 		if (this.guardEffect) {
 			this.guardEffect.setVisible(true);
@@ -518,6 +527,8 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 		this.isAttacking = true;
 		this.attackDidHit = false;
 		this.attackActive = false;
+		this.attackFacing = this.facing;
+		this.setFlipX(this.attackFacing === "right");
 
 		if (this.body.blocked.down) {
 			this.setVelocityX(this.body.velocity.x * 0.35);
@@ -540,6 +551,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 			this.isAttacking = false;
 			this.attackActive = false;
 			this.attackDidHit = false;
+			this.attackFacing = null;
 
 			if (this.attackHitbox?.body) {
 				this.attackHitbox.body.enable = false;
@@ -561,6 +573,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 		this.attackActive = false;
 		this.hasIFrames = false;
 		this.isLaunched = true;
+		this.attackFacing = null;
 
 		if (this.attackHitbox?.body) {
 			this.attackHitbox.body.enable = false;
@@ -576,6 +589,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 		this.attackDidHit = true;
 		this.isClashing = true;
 		this.hasIFrames = true;
+		this.attackFacing = null;
 
 		if (this.attackHitbox?.body) {
 			this.attackHitbox.body.enable = false;
@@ -603,6 +617,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 		this.isAttacking = false;
 		this.attackActive = false;
 		this.hasIFrames = false;
+		this.attackFacing = null;
 
 		if (this.attackHitbox?.body) {
 			this.attackHitbox.body.enable = false;
@@ -629,6 +644,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 
 		this.attackActive = false;
 		this.attackDidHit = false;
+		this.attackFacing = null;
 
 		this.canDash = true;
 		this.hasIFrames = false;

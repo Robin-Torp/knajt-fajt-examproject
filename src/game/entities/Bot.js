@@ -5,32 +5,18 @@ export class Bot extends Fighter {
 	constructor(scene, x, y, config, target) {
 		super(scene, x, y, config);
 		this.target = target;
-		this.attackCooldown = 0;
+		this.aiProfile = "medium";
 	}
 
 	update(time) {
 		if (this.scene.isMatchStarting) {
 			this.stop();
+			this.stopGuard();
 			return;
 		}
 
 		if (this.isDead) return;
+
 		runBotAI(this, this.target, time);
-	}
-
-	wantsToAttack(time) {
-		if (this.isDead || this.isGuarding || this.isDashing || this.isAttacking) {
-			return false;
-		}
-
-		const distanceX = Math.abs(this.target.x - this.x);
-		const distanceY = Math.abs(this.target.y - this.y);
-
-		if (time > this.attackCooldown && distanceX < 80 && distanceY < 50) {
-			this.attackCooldown = time + 900;
-			return true;
-		}
-
-		return false;
 	}
 }
