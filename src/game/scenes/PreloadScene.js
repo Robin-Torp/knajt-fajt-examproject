@@ -36,20 +36,35 @@ export class PreloadScene extends Phaser.Scene {
 			frameHeight: 32,
 		});
 
-		//Bakgrunds assets
+		// Background
 		this.load.image("bg-layer1", "/assets/stage/bg/bg_layer1.png");
 		this.load.image("bg-layer2", "/assets/stage/bg/bg_layer2.png");
 		this.load.image("bg-layer3", "/assets/stage/bg/bg_layer3.png");
 		this.load.image("bg-layer4", "/assets/stage/bg/bg_layer4.png");
 		this.load.image("bg-layer5", "/assets/stage/bg/bg_layer5.png");
 
-		// Atmosfär assets
+		// Atmospheric
 		this.load.image("cloud1", "/assets/stage/cloud1.png");
 		this.load.image("cloud2", "/assets/stage/cloud2.png");
 		this.load.image("cloud3", "/assets/stage/cloud3.png");
 		this.load.image("cloud6", "/assets/stage/cloud6.png");
 		this.load.image("birds1", "/assets/stage/birds1.png");
 		this.load.image("sun", "/assets/stage/sun.png");
+
+		// BGM
+		this.load.audio("bgm-menu", "assets/sound/BGM/bgm.mp3");
+		this.load.audio("bgm-fight", "assets/sound/BGM/fight.mp3");
+
+		// SFX
+		this.load.audio("sfx-bounce", "assets/sound/SFX/bounce.wav");
+		this.load.audio("sfx-clash", "assets/sound/SFX/clash.wav");
+		this.load.audio("sfx-dash", "assets/sound/SFX/dash.wav");
+		this.load.audio("sfx-hit", "assets/sound/SFX/hit.wav");
+		this.load.audio("sfx-jump", "assets/sound/SFX/jump.wav");
+		this.load.audio("sfx-land", "assets/sound/SFX/land.wav");
+		this.load.audio("sfx-swing", "assets/sound/SFX/swing.wav");
+		this.load.audio("sfx-walk", "assets/sound/SFX/walk.wav");
+		this.load.audio("sfx-click", "assets/sound/SFX/click.wav");
 	}
 
 	create() {

@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import { settings } from "../data/settings";
+import { playSFX } from "../services/audioService";
 
 export class Fighter extends Phaser.Physics.Arcade.Sprite {
 	constructor(scene, x, y, config) {
@@ -35,6 +36,8 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 		this.canDash = true;
 		this.dashReadyAt = 0;
 		this.dashReadyBlinking = false;
+		this.wasOnGround = false;
+		this.walkSoundCooldownUntil = 0;
 
 		scene.add.existing(this);
 		scene.physics.add.existing(this);
@@ -98,9 +101,33 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 			this.nameArrow.setPosition(this.x, this.y - 60);
 		}
 
-		if (this.body.blocked.down) {
+		const onGround = this.body.blocked.down;
+
+		if (onGround) {
 			this.jumpsRemaining = this.maxJumps;
 		}
+
+		if (onGround && !this.wasOnGround && !this.isDead) {
+			playSFX(this.scene, "sfx-land");
+		}
+
+		if (
+			onGround &&
+			Math.abs(this.body.velocity.x) > 20 &&
+			!this.isDead &&
+			!this.isDashing &&
+			!this.isAttacking &&
+			!this.isGuarding &&
+			!this.isClashing &&
+			time >= this.walkSoundCooldownUntil
+		) {
+			playSFX(this.scene, "sfx-walk", {
+				volume: (this.scene.registry.get("sfxVolume") ?? 0.8) * 0.45,
+			});
+			this.walkSoundCooldownUntil = time + 250;
+		}
+
+		this.wasOnGround = onGround;
 
 		if (this.body.velocity.y > settings.maxFallSpeed) {
 			this.setVelocityY(settings.maxFallSpeed);
@@ -332,12 +359,14 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 		if (this.body.blocked.down) {
 			this.setVelocityY(-this.jumpForce);
 			this.jumpsRemaining = this.maxJumps - 1;
+			playSFX(this.scene, "sfx-jump");
 			return;
 		}
 
 		if (this.jumpsRemaining > 0) {
 			this.setVelocityY(-this.jumpForce);
 			this.jumpsRemaining -= 1;
+			playSFX(this.scene, "sfx-jump");
 		}
 	}
 
@@ -462,6 +491,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 			}
 		});
 
+		playSFX(this.scene, "sfx-dash");
 		return true;
 	}
 
@@ -532,6 +562,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 
 		this.play(`${this.textureKey}-attack`, true);
 		this.updateAttackHitbox();
+		playSFX(this.scene, "sfx-swing");
 
 		this.scene.time.delayedCall(180, () => {
 			if (!this.isDead && this.isAttacking) {
@@ -676,5 +707,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 		this.setBounce(0, 0);
 		this.setDragX(0);
 		this.setAlpha(1);
+		this.wasOnGround = false;
+		this.walkSoundCooldownUntil = 0;
 	}
 }

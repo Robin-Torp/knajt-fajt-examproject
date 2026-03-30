@@ -126,10 +126,10 @@ export class PauseScene extends Phaser.Scene {
 		this.activeOverlay = "settings";
 
 		const cx = settings.gameWidth / 2;
-		const cy = settings.gameHeight / 2 + 10;
+		const cy = settings.gameHeight / 2;
 
 		this.settingsBlocker = this.add
-			.rectangle(0, 0, settings.gameWidth, settings.gameHeight, 0x000000, 0.2)
+			.rectangle(0, 0, settings.gameWidth, settings.gameHeight, 0x000000, 0.25)
 			.setOrigin(0, 0)
 			.setDepth(210)
 			.setInteractive();
@@ -142,16 +142,17 @@ export class PauseScene extends Phaser.Scene {
 			cx + 8,
 			cy + 10,
 			440,
-			240,
+			250,
 			0x000000,
 			0.35,
 		);
+
 		const bg = this.add
-			.rectangle(cx, cy, 440, 240, 0x1e1610, 0.98)
+			.rectangle(cx, cy, 440, 250, 0x1e1610, 0.98)
 			.setStrokeStyle(3, 0xd8c38c);
 
 		const title = this.add
-			.text(cx, cy - 82, "Audio Settings", {
+			.text(cx, cy - 88, "Audio Settings", {
 				fontFamily: "Canterbury, Georgia, serif",
 				fontSize: "34px",
 				color: "#f8f1dc",
@@ -161,12 +162,12 @@ export class PauseScene extends Phaser.Scene {
 			.setOrigin(0.5);
 
 		const closeBg = this.add
-			.rectangle(cx + 185, cy - 88, 34, 34, 0x6d1919, 1)
+			.rectangle(cx + 185, cy - 92, 34, 34, 0x6d1919, 1)
 			.setStrokeStyle(2, 0xf5e6c8)
 			.setInteractive({ useHandCursor: true });
 
 		const closeText = this.add
-			.text(cx + 185, cy - 88, "X", {
+			.text(cx + 185, cy - 92, "X", {
 				fontSize: "18px",
 				color: "#ffffff",
 			})
@@ -174,24 +175,8 @@ export class PauseScene extends Phaser.Scene {
 
 		closeBg.on("pointerdown", () => this.closeSettings());
 
-		this.musicValueText = this.add
-			.text(cx + 20, cy - 20, `${Math.round(this.music * 100)}%`, {
-				fontFamily: "Georgia, serif",
-				fontSize: "24px",
-				color: "#ffffff",
-			})
-			.setOrigin(0.5);
-
-		this.sfxValueText = this.add
-			.text(cx + 20, cy + 40, `${Math.round(this.sfx * 100)}%`, {
-				fontFamily: "Georgia, serif",
-				fontSize: "24px",
-				color: "#ffffff",
-			})
-			.setOrigin(0.5);
-
 		const musicLabel = this.add
-			.text(cx - 125, cy - 20, "Music", {
+			.text(cx - 140, cy - 25, "Music", {
 				fontFamily: "Canterbury, Georgia, serif",
 				fontSize: "28px",
 				color: "#f3ead1",
@@ -199,35 +184,69 @@ export class PauseScene extends Phaser.Scene {
 			.setOrigin(0, 0.5);
 
 		const sfxLabel = this.add
-			.text(cx - 125, cy + 40, "SFX", {
+			.text(cx - 140, cy + 40, "SFX", {
 				fontFamily: "Canterbury, Georgia, serif",
 				fontSize: "28px",
 				color: "#f3ead1",
 			})
 			.setOrigin(0, 0.5);
 
-		const musicMinus = this.makeMiniButton(cx + 105, cy - 20, "-", () => {
+		this.musicValueText = this.add
+			.text(cx + 10, cy - 25, `${Math.round(this.music * 100)}%`, {
+				fontFamily: "Georgia, serif",
+				fontSize: "24px",
+				color: "#ffffff",
+			})
+			.setOrigin(0.5);
+
+		this.sfxValueText = this.add
+			.text(cx + 10, cy + 40, `${Math.round(this.sfx * 100)}%`, {
+				fontFamily: "Georgia, serif",
+				fontSize: "24px",
+				color: "#ffffff",
+			})
+			.setOrigin(0.5);
+
+		const musicMinus = this.makeMiniButton(cx + 105, cy - 25, "-", () => {
 			this.music = Math.max(0, this.roundVolume(this.music - 0.1));
 			this.registry.set("musicVolume", this.music);
 			this.musicValueText.setText(`${Math.round(this.music * 100)}%`);
+			updateMusicVolume(this);
+			saveAudioSettings({
+				musicVolume: this.music,
+				sfxVolume: this.sfx,
+			});
 		});
 
-		const musicPlus = this.makeMiniButton(cx + 160, cy - 20, "+", () => {
+		const musicPlus = this.makeMiniButton(cx + 160, cy - 25, "+", () => {
 			this.music = Math.min(1, this.roundVolume(this.music + 0.1));
 			this.registry.set("musicVolume", this.music);
 			this.musicValueText.setText(`${Math.round(this.music * 100)}%`);
+			updateMusicVolume(this);
+			saveAudioSettings({
+				musicVolume: this.music,
+				sfxVolume: this.sfx,
+			});
 		});
 
 		const sfxMinus = this.makeMiniButton(cx + 105, cy + 40, "-", () => {
 			this.sfx = Math.max(0, this.roundVolume(this.sfx - 0.1));
 			this.registry.set("sfxVolume", this.sfx);
 			this.sfxValueText.setText(`${Math.round(this.sfx * 100)}%`);
+			saveAudioSettings({
+				musicVolume: this.music,
+				sfxVolume: this.sfx,
+			});
 		});
 
 		const sfxPlus = this.makeMiniButton(cx + 160, cy + 40, "+", () => {
 			this.sfx = Math.min(1, this.roundVolume(this.sfx + 0.1));
 			this.registry.set("sfxVolume", this.sfx);
 			this.sfxValueText.setText(`${Math.round(this.sfx * 100)}%`);
+			saveAudioSettings({
+				musicVolume: this.music,
+				sfxVolume: this.sfx,
+			});
 		});
 
 		this.settingsContainer.add([

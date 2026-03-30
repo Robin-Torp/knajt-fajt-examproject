@@ -8,6 +8,11 @@ import {
 	getProfile,
 } from "../services/authService";
 import { getLeaderboard } from "../services/leaderboardService";
+import {
+	playMusic,
+	playSFX,
+	updateMusicVolume,
+} from "../services/audioService";
 
 export class MenuScene extends Phaser.Scene {
 	constructor() {
@@ -23,6 +28,7 @@ export class MenuScene extends Phaser.Scene {
 		this.authDom = null;
 		this.statusText = null;
 		this.applyAuthDomStyles();
+		playMusic(this, "bgm-menu");
 
 		if (this.registry.get("musicVolume") === undefined) {
 			this.registry.set("musicVolume", 0.6);
@@ -283,7 +289,10 @@ export class MenuScene extends Phaser.Scene {
 			text.y = y;
 		});
 
-		outer.on("pointerdown", onClick);
+		outer.on("pointerdown", () => {
+			playSFX(this, "sfx-click");
+			onClick();
+		});
 
 		return { outer, inner, text };
 	}
@@ -398,12 +407,14 @@ export class MenuScene extends Phaser.Scene {
 			this.music = Math.max(0, this.roundVolume(this.music - 0.1));
 			this.registry.set("musicVolume", this.music);
 			this.musicValueText.setText(`${Math.round(this.music * 100)}%`);
+			updateMusicVolume(this);
 		});
 
 		const musicPlus = this.makeMiniButton(cx + 160, cy - 35, "+", () => {
 			this.music = Math.min(1, this.roundVolume(this.music + 0.1));
 			this.registry.set("musicVolume", this.music);
 			this.musicValueText.setText(`${Math.round(this.music * 100)}%`);
+			updateMusicVolume(this);
 		});
 
 		const sfxMinus = this.makeMiniButton(cx + 105, cy + 35, "-", () => {
