@@ -5,12 +5,15 @@ export const fighters = {
 		texture: "player",
 		speed: settings.playerSpeed,
 		jumpForce: settings.jumpForce,
-		color: 0x4ecdc4,
+		name: "P1",
+		uiColor: "#0f6c4f",
 	},
+
 	botEasy: {
 		texture: "bot",
 		speed: settings.botSpeed,
 		jumpForce: settings.jumpForce,
-		color: 0xff6b6b,
+		name: "BOT",
+		uiColor: "#ff6b6b",
 	},
 };

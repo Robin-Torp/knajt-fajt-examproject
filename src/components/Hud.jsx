@@ -1,9 +1,5 @@
 function Hud() {
-	return (
-		<div className="hud">
-			<p>WASD = movement | SPACE = attack | R = restart</p>
-		</div>
-	);
+	return <div className="hud"></div>;
 }
 
 export default Hud;
