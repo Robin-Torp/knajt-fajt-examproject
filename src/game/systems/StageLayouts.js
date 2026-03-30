@@ -4,24 +4,19 @@ export const TILE_SIZE = 32;
 export const GROUND_Y = settings.gameHeight - 64;
 
 export const stageLayout = {
-	id: "forest-main",
+	id: "battlefield-lite",
 
 	spawnPoints: {
-		player: { x: 180, y: 500, facing: "right" },
-		bot: { x: settings.gameWidth - 180, y: 500, facing: "left" },
+		player: { x: 320, y: 500, facing: "right" },
+		bot: { x: settings.gameWidth - 320, y: 500, facing: "left" },
 	},
 
-	ground: [
-		{ xTiles: 0, widthTiles: 8 },
-		{ xTiles: 12, widthTiles: 10 },
-		{ xTiles: 27, widthTiles: 13 },
-	],
+	ground: [{ xTiles: 5, widthTiles: 30 }],
+
 	platforms: [
-		{ xTiles: 8, y: 560, widthTiles: 4 },
-		{ xTiles: 22, y: 560, widthTiles: 5 },
-		{ xTiles: 14, y: 455, widthTiles: 6 },
-		{ xTiles: 6, y: 360, widthTiles: 3 },
-		{ xTiles: 28, y: 360, widthTiles: 3 },
+		// { xTiles: 8, y: 470, widthTiles: 5 },
+		// { xTiles: 17, y: 410, widthTiles: 6 },
+		// { xTiles: 27, y: 470, widthTiles: 5 },
 	],
 
 	sideWalls: {

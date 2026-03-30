@@ -4,7 +4,7 @@ export const settings = {
 	gravity: 1000,
 
 	playerSpeed: 260,
-	botSpeed: 220,
+	botSpeed: 260,
 
 	jumpForce: 450,
 	maxJumps: 1,
