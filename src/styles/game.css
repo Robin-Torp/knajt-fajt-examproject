@@ -1,9 +1,7 @@
 * {
-    * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-    }
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
 }
 
 @font-face {
@@ -11,6 +9,64 @@
     src: url("/assets/fonts/Canterbury.ttf") format("truetype");
     font-weight: normal;
     font-style: normal;
+}
+
+@font-face {
+    font-family: "Yoster";
+    src: url("/assets/fonts/yoster.ttf") format("truetype");
+    font-weight: normal;
+    font-style: normal;
+}
+
+
+.info-panel {
+    margin-top: 20px;
+    padding: 20px;
+    width: 100%;
+    max-width: 800px;
+
+    background: rgba(20, 15, 10, 0.9);
+    border: 2px solid #d8c38c;
+    border-radius: 8px;
+
+    display: flex;
+    gap: 40px;
+    justify-content: space-between;
+}
+
+.controls,
+.assets {
+    flex: 1;
+    font-family: "Yoster", monospace;
+}
+
+.controls h2,
+.assets h2 {
+    margin-bottom: 10px;
+    color: #f5e6c8;
+}
+
+.controls p {
+    margin: 4px 0;
+    font-size: 14px;
+}
+
+.assets ul {
+    list-style: none;
+    padding: 0;
+}
+
+.assets li {
+    margin-bottom: 6px;
+}
+
+.assets a {
+    color: #d8c38c;
+    text-decoration: none;
+}
+
+.assets a:hover {
+    text-decoration: underline;
 }
 
 canvas {
