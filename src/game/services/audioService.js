@@ -2,12 +2,12 @@ let currentMusic = null;
 let currentMusicKey = null;
 
 const MUSIC_BALANCE = {
-	"bgm-menu": 0.45,
-	"bgm-fight": 1.0,
+	"bgm-menu": 0.2,
+	"bgm-fight": 0.4,
 };
 
 function getMusicVolume(scene, key) {
-	const userVolume = scene.registry.get("musicVolume") ?? 0.6;
+	const userVolume = scene.registry.get("musicVolume") ?? 0.5;
 	const balance = MUSIC_BALANCE[key] ?? 1;
 	return userVolume * balance;
 }
@@ -47,7 +47,7 @@ export function updateMusicVolume(scene) {
 }
 
 export function playSFX(scene, key, extra = {}) {
-	const volume = scene.registry.get("sfxVolume") ?? 0.8;
+	const volume = scene.registry.get("sfxVolume") ?? 0.5;
 
 	scene.sound.play(key, {
 		volume,

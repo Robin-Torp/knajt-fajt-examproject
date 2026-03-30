@@ -5,8 +5,8 @@ export function loadAudioSettings() {
 		const raw = localStorage.getItem(AUDIO_KEY);
 		if (!raw) {
 			return {
-				musicVolume: 0.6,
-				sfxVolume: 0.8,
+				musicVolume: 0.5,
+				sfxVolume: 0.5,
 			};
 		}
 
@@ -15,13 +15,13 @@ export function loadAudioSettings() {
 		return {
 			musicVolume: Number.isFinite(parsed.musicVolume)
 				? parsed.musicVolume
-				: 0.6,
-			sfxVolume: Number.isFinite(parsed.sfxVolume) ? parsed.sfxVolume : 0.8,
+				: 0.5,
+			sfxVolume: Number.isFinite(parsed.sfxVolume) ? parsed.sfxVolume : 0.5,
 		};
 	} catch {
 		return {
-			musicVolume: 0.6,
-			sfxVolume: 0.8,
+			musicVolume: 0.5,
+			sfxVolume: 0.5,
 		};
 	}
 }
