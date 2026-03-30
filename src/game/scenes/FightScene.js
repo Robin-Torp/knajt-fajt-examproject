@@ -6,6 +6,7 @@ import { settings } from "../data/settings";
 import { resolveCombat } from "../systems/combat";
 import { stageLayout, TILE_SIZE, GROUND_Y } from "../systems/StageLayouts";
 import { saveMatch } from "../services/leaderboardService";
+import { playMusic, playSFX } from "../services/audioService";
 
 export class FightScene extends Phaser.Scene {
 	constructor() {
@@ -22,6 +23,7 @@ export class FightScene extends Phaser.Scene {
 		this.botStocks = 3;
 
 		this.currentStage = stageLayout;
+		playMusic(this, "bgm-fight");
 
 		this.createStaticBackground();
 		this.createAtmosphere();
@@ -617,26 +619,31 @@ export class FightScene extends Phaser.Scene {
 			const combatResult = resolveCombat(this, this.player, this.bot);
 
 			if (combatResult.clash) {
+				playSFX(this, "sfx-clash");
 				return;
 			}
 
 			if (combatResult.winner === "A") {
+				playSFX(this, "sfx-hit");
 				this.handleKO("bot");
 				return;
 			}
 
 			if (combatResult.winner === "B") {
+				playSFX(this, "sfx-hit");
 				this.handleKO("player");
 				return;
 			}
 
 			if (this.player.y > settings.gameHeight + 120) {
+				playSFX(this, "sfx-bounce");
 				this.player.die();
 				this.handleKO("player");
 				return;
 			}
 
 			if (this.bot.y > settings.gameHeight + 120) {
+				playSFX(this, "sfx-bounce");
 				this.bot.die();
 				this.handleKO("bot");
 				return;
