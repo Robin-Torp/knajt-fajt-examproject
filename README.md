@@ -1,16 +1,153 @@
-# React + Vite
+# Phaser Fighting Game - Knajt Fajt
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+[https://knajt-fajt-host.vercel.app/](#)
+[http://figma.com/design/AZcazDpaYfDsgHNqnUV0lu/Knajt-Fajt---Exam?node-id=0-1&p=f&t=yETabWYyC8HV2EQv-0](#)
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## About The Project
 
-## React Compiler
+This is a 2D fighting game built with Phaser inside a React + Vite setup. The project includes player controls, AI opponents, a combat system, visual effects, and a Supabase backend for authentication and leaderboard functionality.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+The structure is split into clear parts:
 
-## Expanding the ESLint configuration
+* Phaser scenes (Boot, Preload, Menu, Fight, Pause)
+* Game logic (combat, AI, fighters)
+* Services (auth, leaderboard, audio storage)
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+---
+
+## Tech Stack
+
+### Frontend
+
+* React (19.2.0)
+* Vite
+* Phaser (3.90.0)
+
+### Backend
+
+* Supabase
+
+  * Authentication
+  * Database (leaderboard)
+  * Storage (audio)
+
+---
+
+## Dependencies
+
+```json
+{
+  "@supabase/supabase-js"
+  "phaser"
+  "react"
+  "react-dom"
+}
+```
+
+---
+
+## Getting Started
+
+To run this project locally, you need to install dependencies and configure environment variables.
+
+---
+
+## Prerequisites
+
+Make sure you have the following installed:
+
+* Node.js (latest LTS recommended)
+* npm or yarn
+* A Supabase project
+
+---
+Installation
+
+Clone the repository:
+
+git clone https://github.com/Robin-Torp/knajt-fajt-examproject.git
+
+Navigate into the project folder:
+
+cd knajt-fajt-examproject
+
+Install dependencies:
+
+```bash
+npm install @supabase/supabase-js phaser react-dom
+```
+
+---
+
+## Environment Variables
+
+Create a `.env` file in the root of the project and add:
+
+```env
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_anon_key
+```
+
+You can find these in your Supabase dashboard:
+
+Settings → API
+
+---
+
+## Run Locally
+
+Start the development server:
+
+```bash
+npm run dev
+```
+
+---
+
+## Assets
+
+The following assets are used in this project:
+
+* Characters
+  https://gandalfhardcore.itch.io/2d-pixel-art-male-and-female-character
+
+* Environment
+  https://gandalfhardcore.itch.io/free-pixel-art-sidescroller-asset-pack-32x32-overworld
+
+* Music
+  https://fablefly-music.itch.io/daydream-of-a-deity
+
+* Sound Effects
+  https://leohpaz.itch.io/minifantasy-dungeon-sfx-pack
+
+* Canterbury Font
+  https://www.1001fonts.com/canterbury-font.html
+
+* Yoster Island Font
+  https://www.1001fonts.com/yoster-island-font.html
+
+---
+
+## Notes
+
+* Phaser runs inside a React environment via a custom setup
+* Game logic is separated from rendering where possible
+* Supabase is used for auth, leaderboard, and audio storage
+
+---
+
+## Future Improvement? (Most likely not)
+
+* More characters with different difficulties 
+* Improved AI behavior
+* Multiplayer support
+
+---
+
+## Author
+
+Robin 
+
+---
