@@ -139,7 +139,7 @@ The following assets are used in this project:
 
 ---
 
-## Future Improvement? (Most likely not)
+## Future Improvement
 
 * More characters with different difficulties 
 * Improved AI behavior
