@@ -1,11 +1,16 @@
 import Phaser from "phaser";
 import { createCharacterAnimations } from "../animations/createCharacterAnimations";
 
+// PreloadScene ansvarar för att läsa in spelets assets.
+// Här laddas spritesheets, bakgrunder, ljud och annat som behövs
+// innan spelaren kommer vidare till menyn.
+
 export class PreloadScene extends Phaser.Scene {
 	constructor() {
 		super("PreloadScene");
 	}
 
+	// Här laddas alla filer som spelet behöver innan start.
 	preload() {
 		this.load.spritesheet(
 			"player",
@@ -67,6 +72,7 @@ export class PreloadScene extends Phaser.Scene {
 		this.load.audio("sfx-click", "assets/sound/SFX/click.wav");
 	}
 
+	// När allt är laddat skapas animationerna och menyn startas.
 	create() {
 		createCharacterAnimations(this, "player");
 		createCharacterAnimations(this, "bot");

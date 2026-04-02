@@ -1,11 +1,16 @@
 import Phaser from "phaser";
 import { settings } from "../data/settings";
 
+// PauseScene läggs ovanpå FightScene när matchen pausas.
+// Den visar en overlay med knappar för att fortsätta, starta om,
+// gå till menyn och justera ljudnivåer.
+
 export class PauseScene extends Phaser.Scene {
 	constructor() {
 		super("PauseScene");
 	}
 
+	// Skapar pausmenyn ovanpå den pågående matchen.
 	create() {
 		this.music = this.registry.get("musicVolume") ?? 0.6;
 		this.sfx = this.registry.get("sfxVolume") ?? 0.8;
@@ -84,6 +89,7 @@ export class PauseScene extends Phaser.Scene {
 		});
 	}
 
+	// Samma typ av knappidé som i menyn men anpassad för pauspanelen.
 	makeButton(x, y, label, onClick) {
 		const outer = this.add
 			.rectangle(x, y, 300, 54, 0x2d2115, 0.98)
@@ -122,6 +128,7 @@ export class PauseScene extends Phaser.Scene {
 		outer.on("pointerdown", onClick);
 	}
 
+	// Öppnar en mindre ljudpanel inne i pausmenyn.
 	openSettings() {
 		this.activeOverlay = "settings";
 
@@ -266,6 +273,7 @@ export class PauseScene extends Phaser.Scene {
 		]);
 	}
 
+	// Tar bort inställningspanelen utan att stänga hela pause-scenen.
 	closeSettings() {
 		this.activeOverlay = null;
 
@@ -280,6 +288,7 @@ export class PauseScene extends Phaser.Scene {
 		}
 	}
 
+	// Små plus- och minusknappar för att ändra volym.
 	makeMiniButton(x, y, label, onClick) {
 		const bg = this.add
 			.rectangle(x, y, 42, 42, 0x2e2217, 1)
@@ -303,10 +312,12 @@ export class PauseScene extends Phaser.Scene {
 		return [bg, text];
 	}
 
+	// Hjälper till att hålla volymen inom tydliga steg.
 	roundVolume(value) {
 		return Math.round(value * 10) / 10;
 	}
 
+	// Återupptar matchen och stänger pause-scenen.
 	resumeGame() {
 		this.closeSettings();
 		this.scene.stop();

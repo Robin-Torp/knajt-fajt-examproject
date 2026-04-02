@@ -1,8 +1,15 @@
 import { settings } from "../data/settings";
 
+// Här ligger data för banans layout.
+// Filen beskriver spawnpunkter, marksegment, plattformar,
+// väggar och eventuell dekor som FightScene sedan bygger upp.
+
+// Storleken på en tile används när visuella block och colliders räknas ut.
 export const TILE_SIZE = 32;
+// Grundnivån för marken, räknad från spelhöjden.
 export const GROUND_Y = settings.gameHeight - 64;
 
+// Själva banbeskrivningen som FightScene läser från.
 export const stageLayout = {
 	id: "battlefield-lite",
 

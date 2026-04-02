@@ -1,7 +1,12 @@
 import Phaser from "phaser";
 import { Fighter } from "./Fighter";
 
+// Player är den styrbara karaktären.
+// Klassen bygger vidare på Fighter och översätter tangentbordets input
+// till rörelser, dash, guard, hopp och attacker.
+
 export class Player extends Fighter {
+	// Kopplar tangentbordet till spelarens figur.
 	constructor(scene, x, y, config) {
 		super(scene, x, y, config);
 
@@ -19,6 +24,7 @@ export class Player extends Fighter {
 		this.requireMoveReleaseAfterGuard = false;
 	}
 
+	// Läser input varje frame och omvandlar den till rörelse eller handlingar.
 	update(time) {
 		if (this.scene.isMatchStarting) {
 			this.stop();
@@ -116,6 +122,7 @@ export class Player extends Fighter {
 		}
 	}
 
+	// Hjälper till att avgöra om attackknappen precis användes.
 	wantsToAttack() {
 		if (this.isGuarding || this.isDashing || this.isDead || this.isAttacking) {
 			return false;

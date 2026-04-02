@@ -1,5 +1,10 @@
+// audioStorage sparar och läser ljudinställningar i localStorage.
+// På så sätt kan spelarens musik- och SFX-volym finnas kvar
+// mellan olika sidladdningar.
+
 const AUDIO_KEY = "knajt-fajt-audio";
 
+// Läser tidigare sparade volymer och faller tillbaka till standardvärden om något saknas.
 export function loadAudioSettings() {
 	try {
 		const raw = localStorage.getItem(AUDIO_KEY);
@@ -26,6 +31,7 @@ export function loadAudioSettings() {
 	}
 }
 
+// Sparar nästa ljudinställningar i localStorage.
 export function saveAudioSettings(nextSettings) {
 	localStorage.setItem(AUDIO_KEY, JSON.stringify(nextSettings));
 }

@@ -1,5 +1,10 @@
 import { supabase } from "./supabaseClient";
 
+// leaderboardService hanterar resultat mot Supabase.
+// Här sparas vinster och förluster per användare och topplistan hämtas ut
+// för att kunna visas i menyn.
+
+// Sparar ett matchresultat för en inloggad användare.
 export async function saveMatch({ userId, username, win }) {
 	if (!userId) return;
 
@@ -39,6 +44,7 @@ export async function saveMatch({ userId, username, win }) {
 	if (error) throw error;
 }
 
+// Hämtar topp 10 sorterat på flest vinster.
 export async function getLeaderboard() {
 	const { data, error } = await supabase
 		.from("leaderboard")

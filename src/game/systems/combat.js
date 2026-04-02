@@ -1,6 +1,11 @@
 import Phaser from "phaser";
 import { spawnHitEffect, hitPause, screenShake } from "./effects";
 
+// combat ansvarar för träffkontroll mellan två fighters.
+// Här avgörs om en attack träffar kroppen, om två attacker krockar
+// och vilken effekt som ska spelas upp vid träff eller clash.
+
+// Används för att avgöra om en träff kommer framifrån, vilket kan vara viktigt för guard.
 function isAttackFromFront(attacker, defender) {
 	if (defender.facing === "right") {
 		return attacker.x > defender.x;
@@ -13,6 +18,7 @@ function isAttackFromFront(attacker, defender) {
 	return false;
 }
 
+// Översätter fighter-kroppen till en Phaser-rectangle för kollisionskontroll.
 function getBodyRect(fighter) {
 	return new Phaser.Geom.Rectangle(
 		fighter.body.x,
@@ -22,6 +28,7 @@ function getBodyRect(fighter) {
 	);
 }
 
+// Hämtar aktuell attackyta som rectangle när den finns aktiv.
 function getHitboxRect(fighter) {
 	if (!fighter.attackHitbox?.body) return null;
 
@@ -33,6 +40,7 @@ function getHitboxRect(fighter) {
 	);
 }
 
+// Kollar om en aktiv attackhitbox träffar motståndarens kropp.
 function hitboxHitsBody(attacker, defender) {
 	const hitbox = getHitboxRect(attacker);
 	if (!hitbox || !defender.body) return false;
@@ -42,6 +50,7 @@ function hitboxHitsBody(attacker, defender) {
 	return Phaser.Geom.Intersects.RectangleToRectangle(hitbox, body);
 }
 
+// Kollar om två attacker möts samtidigt och ska räknas som clash.
 function hitboxHitsHitbox(fighterA, fighterB) {
 	const hitboxA = getHitboxRect(fighterA);
 	const hitboxB = getHitboxRect(fighterB);
@@ -51,6 +60,7 @@ function hitboxHitsHitbox(fighterA, fighterB) {
 	return Phaser.Geom.Intersects.RectangleToRectangle(hitboxA, hitboxB);
 }
 
+// Kör själva träfflogiken mellan två fighters för den här frame:n.
 export function resolveCombat(scene, fighterA, fighterB) {
 	const aCanHit =
 		!fighterA.isDead &&

@@ -1,3 +1,8 @@
+// botAI innehåller beslutslogiken för motståndaren.
+// Här avgörs när boten ska närma sig, backa, hoppa, attackera
+// eller hålla guard beroende på avstånd och situation.
+
+// Räknar ut spelbar bredd utifrån marksegmentet så boten vet var kanterna är.
 function getStageBounds(bot) {
 	const stage = bot.scene.currentStage;
 	const ground = stage?.ground?.[0];
@@ -16,10 +21,12 @@ function getStageBounds(bot) {
 	return { left, right };
 }
 
+// Slumpar heltal inom ett intervall.
 function randInt(min, max) {
 	return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+// Liten hjälpfunktion för sannolikhetskontroller.
 function chance(value) {
 	return Math.random() < value;
 }
@@ -54,11 +61,13 @@ const BOT_PERSONALITIES = {
 	},
 };
 
+// Hämtar personlighetsprofilen som styr hur aggressiv eller försiktig boten ska vara.
 function getBotPersonality(bot) {
 	const key = bot.aiProfile || "medium";
 	return BOT_PERSONALITIES[key] || BOT_PERSONALITIES.medium;
 }
 
+// Ser till att AI:n har alla tillståndsvariabler initierade innan beslutslogiken körs.
 function initMemory(bot, dx) {
 	if (bot.aiState == null) bot.aiState = "idle";
 	if (bot.aiThinkAt == null) bot.aiThinkAt = 0;
@@ -72,16 +81,19 @@ function initMemory(bot, dx) {
 	if (bot.aiLastTargetSide == null) bot.aiLastTargetSide = dx >= 0 ? 1 : -1;
 }
 
+// Kortkommando för att gå mot spelaren.
 function moveToward(bot, dx, time) {
 	if (dx < 0) bot.moveLeft(time);
 	else bot.moveRight(time);
 }
 
+// Kortkommando för att backa från spelaren.
 function moveAway(bot, dx, time) {
 	if (dx < 0) bot.moveRight(time);
 	else bot.moveLeft(time);
 }
 
+// Försöker starta en markattack om cooldown och tillstånd tillåter det.
 function tryGroundAttack(bot, time, personality) {
 	if (time < bot.aiAttackAt) return false;
 	if (bot.isAttacking || bot.isDashing || bot.isGuarding) return false;
@@ -97,6 +109,7 @@ function tryGroundAttack(bot, time, personality) {
 	return started;
 }
 
+// Försöker göra ett hop-in och planerar även när luftattacken ska triggas.
 function tryJumpIn(bot, dx, time, personality) {
 	if (!bot.body.blocked.down) return false;
 	if (time < bot.aiNextJumpInAt) return false;
@@ -115,6 +128,7 @@ function tryJumpIn(bot, dx, time, personality) {
 	return true;
 }
 
+// Huvudfunktionen för AI:n. Den körs varje frame och väljer nästa handling.
 export function runBotAI(bot, target, time) {
 	if (!bot.body || !target || bot.isDead || target.isDead) {
 		bot.stop();

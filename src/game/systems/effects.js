@@ -1,3 +1,8 @@
+// Små visuella och effekter som används i strid.
+// De här funktionerna gör att träffar känns tydligare genom flash,
+// kort paus i fysiken och kameraskakning.
+
+// Enkel träffeffekt med ring och flash.
 export function spawnHitEffect(scene, x, y) {
 	const ring = scene.add.circle(x, y, 14, 0xffffff, 0.95);
 	const flash = scene.add.circle(x, y, 6, 0xffffaa, 1);
@@ -22,6 +27,7 @@ export function spawnHitEffect(scene, x, y) {
 	});
 }
 
+// Kort paus i fysiken gör att träffar känns tyngre.
 export function hitPause(scene, duration = 40) {
 	scene.physics.world.pause();
 
@@ -30,6 +36,7 @@ export function hitPause(scene, duration = 40) {
 	});
 }
 
+// Skakar kameran lätt för att förstärka känslan av impact.
 export function screenShake(scene, duration = 80, intensity = 0.003) {
 	if (!scene?.cameras?.main) return;
 	scene.cameras.main.shake(duration, intensity);

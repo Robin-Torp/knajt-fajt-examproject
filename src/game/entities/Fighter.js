@@ -2,7 +2,12 @@ import Phaser from "phaser";
 import { settings } from "../data/settings";
 import { playSFX } from "../services/audioService";
 
+// Fighter är basklassen för både Player och Bot.
+// Den samlar all gemensam logik för rörelse, hopp, dash, guard,
+// attacker, animationer, hitbox och tillstånd.
+
 export class Fighter extends Phaser.Physics.Arcade.Sprite {
+	// Grundsetup för en fighter. Här skapas sprite, fysik, vapen, guard-effekt och hitbox.
 	constructor(scene, x, y, config) {
 		super(scene, x, y, config.texture);
 
@@ -88,6 +93,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 		this.play(`${this.textureKey}-idle`);
 	}
 
+	// preUpdate körs före render varje frame och håller hjälpelement i synk med figuren.
 	preUpdate(time, delta) {
 		super.preUpdate(time, delta);
 
@@ -166,6 +172,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 		this.updateAttackHitbox();
 	}
 
+	// Väljer rätt animation utifrån tillstånd som död, attack, dash, hopp eller stillastående.
 	updateAnimation() {
 		if (this.isDead) {
 			this.playIfNeeded(`${this.textureKey}-death`);
@@ -209,12 +216,14 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 		this.playIfNeeded(`${this.textureKey}-idle`);
 	}
 
+	// Byter bara animation om det faktiskt behövs för att undvika onödiga omstarter.
 	playIfNeeded(key) {
 		if (this.anims.currentAnim?.key !== key) {
 			this.play(key, true);
 		}
 	}
 
+	// Vänder figuren mot sitt mål så svärd och attackhitbox hamnar åt rätt håll.
 	faceTarget(target) {
 		if (!target) return;
 
@@ -237,6 +246,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 		}
 	}
 
+	// Håller svärdets position och animation synkad med karaktären.
 	updateSword() {
 		if (!this.sword) return;
 
@@ -269,6 +279,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 		}
 	}
 
+	// Flyttar attackhitboxen framför figuren och aktiverar den bara under aktiva attackframes.
 	updateAttackHitbox() {
 		if (!this.attackHitbox || !this.attackHitbox.body) return;
 
@@ -290,6 +301,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 		this.attackHitbox.body.enable = true;
 	}
 
+	// Används bland annat efter wall jump för att kort låsa rörelse åt ett håll.
 	canMoveInDirection(direction, time) {
 		if (
 			time < this.wallJumpLockUntil &&
@@ -301,6 +313,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 		return true;
 	}
 
+	// Försök att gå åt vänster om nuvarande tillstånd tillåter det.
 	moveLeft(time = 0) {
 		if (
 			this.isDead ||
@@ -318,6 +331,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 		this.facing = "left";
 	}
 
+	// Försök att gå åt höger om nuvarande tillstånd tillåter det.
 	moveRight(time = 0) {
 		if (
 			this.isDead ||
@@ -335,6 +349,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 		this.facing = "right";
 	}
 
+	// Stoppar horisontell rörelse utan att påverka gravitation eller vertikal fart.
 	stop() {
 		if (this.isDead || this.isDashing || this.isClashing) return;
 
@@ -346,6 +361,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 		this.setVelocityX(0);
 	}
 
+	// Vanligt hopp. Klassen håller själv reda på hur många hopp som finns kvar.
 	jump() {
 		if (
 			this.isDead ||
@@ -370,6 +386,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 		}
 	}
 
+	// Wall jump skjuter spelaren bort från väggen och låser kort tillbaka-riktningen.
 	wallJump(direction) {
 		if (
 			this.isDead ||
@@ -391,6 +408,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 		this.jumpsRemaining = Math.max(0, this.jumpsRemaining - 1);
 	}
 
+	// Gör att figuren faller snabbare nedåt när spelaren trycker neråt i luften.
 	fastFall() {
 		if (this.isDead || this.isDashing || this.isClashing) return;
 		if (this.body.blocked.down) return;
@@ -400,6 +418,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 		}
 	}
 
+	// Tillfälligt ignorerar plattformar så figuren kan hoppa ned genom dem.
 	dropThroughPlatform() {
 		if (
 			this.isDead ||
@@ -414,10 +433,12 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 		this.setVelocityY(Math.max(this.body.velocity.y, 160));
 	}
 
+	// Hjälpfunktion som berättar om plattformar ska ignoreras just nu.
 	isIgnoringPlatforms(time) {
 		return time < this.ignorePlatformUntil;
 	}
 
+	// Går in i guard-läge om figuren får göra det.
 	startGuard() {
 		if (
 			this.isDead ||
@@ -441,6 +462,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 		}
 	}
 
+	// Avslutar guard och gömmer guard-effekten.
 	stopGuard() {
 		this.isGuarding = false;
 
@@ -451,6 +473,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 		}
 	}
 
+	// Kort snabb rörelse som också startar cooldown innan nästa dash.
 	dash(direction) {
 		if (
 			this.isDead ||
@@ -495,6 +518,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 		return true;
 	}
 
+	// Liten visuell feedback när dash blir tillgänglig igen.
 	blinkDashReady() {
 		if (this.dashReadyBlinking || this.isDead) return;
 
@@ -532,6 +556,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 		flash();
 	}
 
+	// Startar en attack, aktiverar rätt state och schemalägger när hitboxen ska vara aktiv.
 	startAttack() {
 		if (
 			this.isDead ||
@@ -592,6 +617,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 		return true;
 	}
 
+	// Används när figuren blir utslagen bakåt av en träff.
 	launch(direction = 1, powerX = 340, powerY = 260) {
 		this.isDead = true;
 		this.isGuarding = false;
@@ -610,6 +636,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 		this.setBounce(0.5, 0.8);
 	}
 
+	// Pushback som används när två attacker krockar samtidigt.
 	clashPush(direction = 1) {
 		this.isAttacking = false;
 		this.attackActive = false;
@@ -632,6 +659,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 		});
 	}
 
+	// Markerar figuren som död och stänger av handlingar som inte längre ska gå att göra.
 	die() {
 		if (this.hasIFrames) return;
 
@@ -661,6 +689,7 @@ export class Fighter extends Phaser.Physics.Arcade.Sprite {
 		this.setAlpha(0.5);
 	}
 
+	// Rensar tillfälliga states inför exempelvis respawn.
 	resetState() {
 		this.isDead = false;
 		this.isGuarding = false;

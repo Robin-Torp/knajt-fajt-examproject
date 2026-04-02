@@ -8,11 +8,16 @@ import { stageLayout, TILE_SIZE, GROUND_Y } from "../systems/StageLayouts";
 import { saveMatch } from "../services/leaderboardService";
 import { playMusic, playSFX } from "../services/audioService";
 
+// FightScene är huvudscenen för själva matchen.
+// Här byggs banan upp, spelare och bot skapas, HUD visas
+// och all logik för ronder, respawn och matchslut körs.
+
 export class FightScene extends Phaser.Scene {
 	constructor() {
 		super("FightScene");
 	}
 
+	// Startar upp en ny match, sätter grundstatus och bygger scenen.
 	create() {
 		this.roundOver = false;
 		this.matchDecided = false;
@@ -66,6 +71,7 @@ export class FightScene extends Phaser.Scene {
 		this.startMatchSequence();
 	}
 
+	// Skapar HUD med namn, stocks och text för resultat eller rundinformation.
 	createHud() {
 		this.playerHudName = this.add.text(20, 16, fighters.player.name || "P1", {
 			fontSize: "24px",
@@ -103,6 +109,7 @@ export class FightScene extends Phaser.Scene {
 			.setOrigin(0.5, 0);
 	}
 
+	// Lägger ut alla bakgrundslager och solen som animeras lätt i bakgrunden.
 	createStaticBackground() {
 		this.bgLayers = {};
 
@@ -135,6 +142,7 @@ export class FightScene extends Phaser.Scene {
 		});
 	}
 
+	// Startar extra miljödetaljer som moln, fåglar och trädens rörelse.
 	createAtmosphere() {
 		this.clouds = [];
 		this.birds = [];
@@ -144,6 +152,7 @@ export class FightScene extends Phaser.Scene {
 		this.startBirdSpawner();
 	}
 
+	// Ger några bakgrundslager en liten sidledsrörelse så scenen känns mindre statisk.
 	startTreeWind() {
 		const swayConfigs = [
 			{ key: "bg-layer1", distance: 4, duration: 7200, direction: 1 },
@@ -168,6 +177,7 @@ export class FightScene extends Phaser.Scene {
 		});
 	}
 
+	// Skapar ett startlager av moln med slumpad position och hastighet.
 	spawnInitialClouds() {
 		const cloudKeys = ["cloud1", "cloud2", "cloud3", "cloud6"];
 
@@ -187,6 +197,7 @@ export class FightScene extends Phaser.Scene {
 		}
 	}
 
+	// Återanvänder ett moln när det har åkt utanför skärmen.
 	respawnCloud(cloud, fromRight = true) {
 		const cloudKeys = ["cloud1", "cloud2", "cloud3", "cloud6"];
 
@@ -200,6 +211,7 @@ export class FightScene extends Phaser.Scene {
 		cloud.setDepth(-48);
 	}
 
+	// Startar en timer som ibland skickar förbi en fågelgrupp.
 	startBirdSpawner() {
 		this.time.addEvent({
 			delay: 9000,
@@ -211,6 +223,7 @@ export class FightScene extends Phaser.Scene {
 		});
 	}
 
+	// Skapar en fågel och ger den riktning, fart och lite bobbande rörelse.
 	spawnBird() {
 		const fromLeft = Math.random() > 0.5;
 		const x = fromLeft ? -80 : settings.gameWidth + 80;
@@ -237,6 +250,7 @@ export class FightScene extends Phaser.Scene {
 		this.birds.push(bird);
 	}
 
+	// Flyttar moln och fåglar varje frame och städar bort sådant som lämnar scenen.
 	updateAtmosphere(delta) {
 		const dt = delta / 1000;
 
@@ -259,6 +273,7 @@ export class FightScene extends Phaser.Scene {
 		}
 	}
 
+	// Samlar arrayer för banans colliders och visuella objekt så de blir lättare att hålla ordning på.
 	createStageContainers() {
 		this.groundBodies = [];
 		this.platformBodies = [];
@@ -268,6 +283,7 @@ export class FightScene extends Phaser.Scene {
 		this.stageColliders = [];
 	}
 
+	// Läser stage-data och bygger mark, plattformar, väggar och dekor.
 	buildStage(stage) {
 		stage.ground.forEach((segment) => {
 			this.spawnGroundSegment(segment.xTiles, segment.widthTiles);
@@ -294,6 +310,7 @@ export class FightScene extends Phaser.Scene {
 		stage.decorFront?.forEach((item) => this.spawnDecorItem(item));
 	}
 
+	// Skapar ett marksegment både som collider och som synlig tile-rad.
 	spawnGroundSegment(startTile, widthTiles) {
 		const startX = startTile * TILE_SIZE;
 		const widthPx = widthTiles * TILE_SIZE;
@@ -355,6 +372,7 @@ export class FightScene extends Phaser.Scene {
 		}
 	}
 
+	// Skapar en plattform som går att landa på ovanifrån.
 	spawnPlatform(xTiles, y, widthTiles) {
 		const startX = xTiles * TILE_SIZE;
 		const widthPx = widthTiles * TILE_SIZE;
@@ -398,6 +416,7 @@ export class FightScene extends Phaser.Scene {
 		}
 	}
 
+	// Väggar på sidorna håller karaktärerna inom banans tänkta område.
 	spawnSideWallCollider(x, width, height) {
 		const wall = this.add.rectangle(
 			x,
@@ -412,6 +431,7 @@ export class FightScene extends Phaser.Scene {
 		this.wallBodies.push(wall);
 	}
 
+	// Allmän hjälpfunktion för dekorobjekt från stageLayout.
 	spawnDecorItem(item) {
 		if (!this.textures.exists(item.key)) return;
 
@@ -448,6 +468,7 @@ export class FightScene extends Phaser.Scene {
 		this.decorSprites.push(obj);
 	}
 
+	// Kopplar fighters mot mark, plattformar och väggar.
 	setupStageColliders() {
 		this.groundBodies.forEach((body) => {
 			this.stageColliders.push(this.physics.add.collider(this.player, body));
@@ -482,6 +503,7 @@ export class FightScene extends Phaser.Scene {
 		});
 	}
 
+	// Säkerställer att en fighter tittar åt rätt håll direkt vid spawn.
 	applySpawnFacing(fighter, facing) {
 		fighter.facing = facing;
 
@@ -492,11 +514,13 @@ export class FightScene extends Phaser.Scene {
 		}
 	}
 
+	// Uppdaterar HUD så spelaren direkt ser hur många liv som finns kvar.
 	updateStockText() {
 		this.playerHudStocks.setText("● ".repeat(this.playerStocks).trim() || "—");
 		this.botHudStocks.setText("● ".repeat(this.botStocks).trim() || "—");
 	}
 
+	// Bestämmer om en fighter ska kollidera med en plattform just nu.
 	shouldCollideWithPlatform(fighter, platform) {
 		const now = this.time.now;
 
@@ -519,6 +543,7 @@ export class FightScene extends Phaser.Scene {
 		return true;
 	}
 
+	// Hanterar nedräkning eller kort startsekvens innan spelarna får kontroll.
 	startMatchSequence() {
 		this.isMatchStarting = true;
 
@@ -583,6 +608,7 @@ export class FightScene extends Phaser.Scene {
 		this.time.delayedCall(500, tick);
 	}
 
+	// Liten tween som gör viktig text mer tydlig.
 	pulseText(text) {
 		text.setScale(0.5);
 		text.setAlpha(0);
@@ -598,6 +624,7 @@ export class FightScene extends Phaser.Scene {
 		});
 	}
 
+	// update körs varje frame och håller matchen igång.
 	update(time, delta) {
 		if (Phaser.Input.Keyboard.JustDown(this.pauseKey)) {
 			this.scene.launch("PauseScene");
@@ -651,6 +678,7 @@ export class FightScene extends Phaser.Scene {
 		}
 	}
 
+	// Kör när någon förlorar ett liv och avgör om ronden ska fortsätta eller om matchen är slut.
 	handleKO(loser) {
 		if (this.isRespawning || this.matchDecided) return;
 
@@ -682,6 +710,7 @@ export class FightScene extends Phaser.Scene {
 		});
 	}
 
+	// Återställer en fighter efter KO och placerar tillbaka den på banan.
 	respawnFighter(loser) {
 		const fighter = loser === "player" ? this.player : this.bot;
 		const spawn =
@@ -698,6 +727,7 @@ export class FightScene extends Phaser.Scene {
 		this.applyRespawnInvulnerability(fighter);
 	}
 
+	// Ger kort skydd efter respawn så spelaren inte träffas direkt igen.
 	applyRespawnInvulnerability(fighter) {
 		fighter.hasIFrames = true;
 
@@ -730,6 +760,7 @@ export class FightScene extends Phaser.Scene {
 		flash();
 	}
 
+	// Avslutar matchen, visar resultat och sparar leaderboard om det behövs.
 	endRound(message) {
 		this.roundOver = true;
 

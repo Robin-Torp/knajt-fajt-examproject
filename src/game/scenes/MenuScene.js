@@ -14,11 +14,16 @@ import {
 	updateMusicVolume,
 } from "../services/audioService";
 
+// MenuScene är spelets startmeny.
+// Här hanteras bland annat bakgrund, titel, knappar, ljudinställningar,
+// leaderboard och inloggning via Supabase.
+
 export class MenuScene extends Phaser.Scene {
 	constructor() {
 		super("MenuScene");
 	}
 
+	// create sätter upp hela menyn och återställer lokala referenser.
 	async create() {
 		this.activeOverlay = null;
 		this.overlayBlocker = null;
@@ -47,6 +52,7 @@ export class MenuScene extends Phaser.Scene {
 		await this.syncUserFromSession();
 	}
 
+	// Hämtar eventuell aktiv Supabase-session och synkar namn till Phaser registry.
 	async syncUserFromSession() {
 		const { user } = await getCurrentUser();
 
@@ -72,6 +78,7 @@ export class MenuScene extends Phaser.Scene {
 		this.refreshAccountBar();
 	}
 
+	// Skapar parallaxbakgrunden genom att lägga två bilder per lager bredvid varandra.
 	createBackground() {
 		this.layers = [
 			{ key: "bg-layer5", speed: 0.08, depth: -10 },
@@ -99,6 +106,7 @@ export class MenuScene extends Phaser.Scene {
 		});
 	}
 
+	// Lägger en mörk ton över kanterna så menyn känns lite djupare.
 	createVignette() {
 		this.add
 			.rectangle(
@@ -112,6 +120,7 @@ export class MenuScene extends Phaser.Scene {
 			.setDepth(1);
 	}
 
+	// Bygger titeln av flera textdelar så vissa bokstäver kan få annan stil och färg.
 	createTitle() {
 		const centerX = settings.gameWidth / 2;
 		const y = 120;
@@ -149,6 +158,7 @@ export class MenuScene extends Phaser.Scene {
 		});
 	}
 
+	// Visar aktuell användare uppe i hörnet tillsammans med login eller logout.
 	createAccountBar() {
 		const currentName = this.registry.get("playerName") || "Guest";
 
@@ -187,6 +197,7 @@ export class MenuScene extends Phaser.Scene {
 		);
 	}
 
+	// Uppdaterar text och visar rätt knapp beroende på om användaren är inloggad.
 	refreshAccountBar() {
 		const userId = this.registry.get("userId");
 		const playerName = this.registry.get("playerName") || "Guest";
@@ -208,6 +219,7 @@ export class MenuScene extends Phaser.Scene {
 		}
 	}
 
+	// Skapar menyknapparna och kopplar varje knapp till rätt handling.
 	createButtons() {
 		const cx = settings.gameWidth / 2;
 		const startY = 285;
@@ -254,6 +266,7 @@ export class MenuScene extends Phaser.Scene {
 		});
 	}
 
+	// Standardknapp för huvudmenyn med hover-effekt och klickljud.
 	makeButton(x, y, label, onClick) {
 		const outer = this.add
 			.rectangle(x, y, 320, 56, 0x2d2115, 0.95)
@@ -297,6 +310,7 @@ export class MenuScene extends Phaser.Scene {
 		return { outer, inner, text };
 	}
 
+	// Mindre knapp som används i toppbaren för login och logout.
 	makeSmallTopButton(x, y, label, onClick) {
 		const outer = this.add
 			.rectangle(x, y, 100, 34, 0x2d2115, 0.95)
@@ -320,6 +334,7 @@ export class MenuScene extends Phaser.Scene {
 		return { outer, inner, text };
 	}
 
+	// Ett osynligt lager som fångar klick så spelaren inte kan trycka på menyn bakom en modal.
 	createOverlayBlocker() {
 		this.overlayBlocker = this.add
 			.rectangle(0, 0, settings.gameWidth, settings.gameHeight, 0x000000, 0.42)
@@ -330,6 +345,7 @@ export class MenuScene extends Phaser.Scene {
 		this.overlayBlocker.on("pointerdown", () => {});
 	}
 
+	// Öppnar modal för ljudinställningar och läser nuvarande värden från registry.
 	openSettings() {
 		this.activeOverlay = "settings";
 
@@ -445,6 +461,7 @@ export class MenuScene extends Phaser.Scene {
 		]);
 	}
 
+	// Hämtar topplistan från Supabase och visar den i en separat overlay.
 	async openLeaderboard() {
 		this.activeOverlay = "leaderboard";
 		this.createOverlayBlocker();
@@ -506,6 +523,7 @@ export class MenuScene extends Phaser.Scene {
 		this.leaderboardContainer.add([panel, title, closeBg, closeText, content]);
 	}
 
+	// Skapar login eller register-formulär ovanpå menyn.
 	openAuthModal(defaultMode = "login") {
 		this.activeOverlay = "auth";
 		this.createOverlayBlocker();
@@ -746,6 +764,7 @@ export class MenuScene extends Phaser.Scene {
 		});
 	}
 
+	// Säkerställer att DOM-elementen för authformuläret får samma känsla som resten av UI:t.
 	applyAuthDomStyles() {
 		if (document.getElementById("kf-auth-styles")) return;
 
@@ -864,6 +883,7 @@ export class MenuScene extends Phaser.Scene {
 		document.head.appendChild(style);
 	}
 
+	// Stänger aktiv overlay och städar bort tillhörande objekt.
 	closeOverlay() {
 		this.activeOverlay = null;
 
@@ -893,6 +913,7 @@ export class MenuScene extends Phaser.Scene {
 		}
 	}
 
+	// Hjälpfunktion för små knappar inne i overlays.
 	makeMiniButton(x, y, label, onClick) {
 		const bg = this.add
 			.rectangle(x, y, 42, 42, 0x2e2217, 1)
@@ -914,10 +935,12 @@ export class MenuScene extends Phaser.Scene {
 		return [bg, text];
 	}
 
+	// Avrundar volymvärden så UI:t visar rena steg.
 	roundVolume(value) {
 		return Math.round(value * 10) / 10;
 	}
 
+	// update rullar bakgrundslagren långsamt så menyn känns levande även när inget händer.
 	update(_, dt) {
 		const d = dt / 16.666;
 

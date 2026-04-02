@@ -5,6 +5,11 @@ import { FightScene } from "./scenes/FightScene";
 import { PauseScene } from "./scenes/PauseScene";
 import { settings } from "./data/settings";
 
+// Phaser-konfigurationen samlas här.
+// Den beskriver bland annat storlek, fysik, DOM-stöd och vilka scener
+// som ska startas i vilken ordning.
+
+// Returnerar Phaser-konfigurationen. Funktionen tar parent så spelet kan mountas i rätt element.
 export const gameConfig = (parent) => ({
 	type: Phaser.AUTO,
 	width: settings.gameWidth,
