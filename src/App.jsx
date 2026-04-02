@@ -29,6 +29,9 @@ function App() {
 					<p>
 						<b>K</b> - Shield (can still be hit from behind)
 					</p>
+					<p>
+						<b>ESC</b> - To pause the game
+					</p>
 				</section>
 
 				<section className="assets">
