@@ -1,7 +1,8 @@
 # Phaser Fighting Game - Knajt Fajt
 
-[https://knajt-fajt-host.vercel.app/](#)
-[http://figma.com/design/AZcazDpaYfDsgHNqnUV0lu/Knajt-Fajt---Exam?node-id=0-1&p=f&t=yETabWYyC8HV2EQv-0](#)
+[Hosted Version](https://knajt-fajt-host.vercel.app/)
+
+[FIGMA](https://www.figma.com/design/AZcazDpaYfDsgHNqnUV0lu/Knajt-Fajt---Exam?node-id=0-1&t=mPvvLcTAUP3pgFnF-1)
 
 ---
 
